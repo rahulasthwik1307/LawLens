@@ -2,10 +2,119 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Scale, Menu, X, ArrowRight } from "lucide-react"
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+  const pathname = usePathname()
+  const [activeSection, setActiveSection] = React.useState<string | null>(null)
+
+  // Track active landing-page section when on "/"
+  React.useEffect(() => {
+    if (pathname !== "/") {
+      setActiveSection(null)
+      return
+    }
+
+    const sectionIds = ["understand", "evidence", "jurisdiction"]
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null)
+
+    if (sections.length === 0) return
+
+    const computeActiveSection = () => {
+      // Hero area check: at top of page, no section link should be active
+      if (window.scrollY < 180) {
+        setActiveSection(null)
+        return
+      }
+
+      const headerOffset = 100 // accounts for sticky navbar height (60px) + offset
+      let current: string | null = null
+
+      // Check which section spans the header offset line
+      for (const id of sectionIds) {
+        const el = document.getElementById(id)
+        if (!el) continue
+        const rect = el.getBoundingClientRect()
+        if (rect.top <= headerOffset && rect.bottom > headerOffset) {
+          current = id
+          break
+        }
+      }
+
+      // Fallback: check if the top of a section is in the upper viewport area
+      if (!current) {
+        for (const id of sectionIds) {
+          const el = document.getElementById(id)
+          if (!el) continue
+          const rect = el.getBoundingClientRect()
+          if (rect.top >= 0 && rect.top < window.innerHeight * 0.45) {
+            current = id
+            break
+          }
+        }
+      }
+
+      setActiveSection(current)
+    }
+
+    // IntersectionObserver triggers updates when sections cross viewport
+    const observer = new IntersectionObserver(
+      () => {
+        computeActiveSection()
+      },
+      {
+        rootMargin: "-60px 0px -40% 0px",
+        threshold: [0, 0.2, 0.5],
+      }
+    )
+
+    sections.forEach((sec) => observer.observe(sec))
+
+    // Scroll listener ensures smooth updates, fast scrolling, and hero area clearing
+    let ticking = false
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          computeActiveSection()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    computeActiveSection()
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [pathname])
+
+  const getSectionHref = (id: string) => (pathname === "/" ? `#${id}` : `/#${id}`)
+
+  const isWorkspaceActive = pathname === "/workspace"
+  const isMethodologyActive = pathname === "/" && activeSection === "understand"
+  const isEvidenceActive = pathname === "/" && activeSection === "evidence"
+  const isIndiaFirstActive = pathname === "/" && activeSection === "jurisdiction"
+
+  const navLinkClass = (isActive: boolean) =>
+    `transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1 ${
+      isActive
+        ? "text-primary font-semibold"
+        : "text-ink-secondary hover:text-ink-primary font-medium"
+    }`
+
+  const mobileNavLinkClass = (isActive: boolean) =>
+    `py-1.5 transition-colors ${
+      isActive
+        ? "text-primary font-semibold"
+        : "text-ink-secondary hover:text-ink-primary font-medium"
+    }`
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/90 backdrop-blur-md transition-colors">
@@ -31,28 +140,28 @@ export function Header() {
         </div>
 
         {/* Center: Primary Navigation */}
-        <nav className="hidden md:flex items-center gap-7 text-xs tracking-wide text-ink-secondary" aria-label="Main Navigation">
+        <nav className="hidden md:flex items-center gap-7 text-xs tracking-wide" aria-label="Main Navigation">
           <Link
             href="/workspace"
-            className="hover:text-primary font-semibold text-primary transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1"
+            className={navLinkClass(isWorkspaceActive)}
           >
             Document Workspace
           </Link>
           <a
-            href="/#understand"
-            className="hover:text-ink-primary font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1"
+            href={getSectionHref("understand")}
+            className={navLinkClass(isMethodologyActive)}
           >
             Methodology
           </a>
           <a
-            href="/#evidence"
-            className="hover:text-ink-primary font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1"
+            href={getSectionHref("evidence")}
+            className={navLinkClass(isEvidenceActive)}
           >
             Evidence Model
           </a>
           <a
-            href="/#jurisdiction"
-            className="hover:text-ink-primary font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1"
+            href={getSectionHref("jurisdiction")}
+            className={navLinkClass(isIndiaFirstActive)}
           >
             India-First
           </a>
@@ -104,35 +213,35 @@ export function Header() {
               <span>India (Default)</span>
             </div>
           </div>
-          <nav className="flex flex-col space-y-2 text-sm font-medium text-ink-secondary">
+          <nav className="flex flex-col space-y-2 text-sm font-medium">
             <Link
               href="/workspace"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1.5 text-primary font-semibold hover:text-ink-primary flex items-center justify-between"
+              className={`flex items-center justify-between ${mobileNavLinkClass(isWorkspaceActive)}`}
             >
               <span>Document Workspace</span>
               <ArrowRight className="size-4" />
             </Link>
             <a
-              href="/#understand"
+              href={getSectionHref("understand")}
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1.5 hover:text-ink-primary"
+              className={mobileNavLinkClass(isMethodologyActive)}
             >
               Methodology
             </a>
             <a
-              href="/#evidence"
+              href={getSectionHref("evidence")}
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1.5 hover:text-ink-primary"
+              className={mobileNavLinkClass(isEvidenceActive)}
             >
               Evidence Model
             </a>
             <a
-              href="/#jurisdiction"
+              href={getSectionHref("jurisdiction")}
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1.5 hover:text-ink-primary"
+              className={mobileNavLinkClass(isIndiaFirstActive)}
             >
-              India-First Scope
+              India-First
             </a>
             <a
               href="/#standards"

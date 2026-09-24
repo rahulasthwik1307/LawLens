@@ -83,7 +83,7 @@ export default function Home() {
               </div>
 
               {/* Right Column: Wide Compact Evidence Demonstration Specimen */}
-              <div className="lg:col-span-7 xl:col-span-7" id="evidence">
+              <div className="lg:col-span-7 xl:col-span-7">
                 <DocumentLensSpecimen />
               </div>
             </div>
@@ -91,7 +91,7 @@ export default function Home() {
         </section>
 
         {/* SECTION 1 — THE LAWLENS CYCLE (Understand. Verify. Act. Connect.) */}
-        <section id="understand" className="py-14 md:py-20 border-b border-border/70 bg-paper/30">
+        <section id="understand" className="py-14 md:py-20 border-b border-border/70 bg-paper/30 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <div className="max-w-2xl space-y-2">
               <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary block">
@@ -112,7 +112,7 @@ export default function Home() {
         </section>
 
         {/* SECTION 2 — SOURCE ≠ INTERPRETATION (Original vs. Plain Explanation) */}
-        <section className="py-14 md:py-20 border-b border-border/70">
+        <section id="evidence" className="py-14 md:py-20 border-b border-border/70 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               <div className="lg:col-span-5 space-y-4">
@@ -157,7 +157,7 @@ export default function Home() {
         </section>
 
         {/* SECTION 3 — INDIA-FIRST CONTEXT (Product Storytelling) */}
-        <section id="jurisdiction" className="py-14 md:py-20 border-b border-border/70 bg-paper/40">
+        <section id="jurisdiction" className="py-14 md:py-20 border-b border-border/70 bg-paper/40 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-10 space-y-2">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-medium">
@@ -280,7 +280,7 @@ export default function Home() {
         </section>
 
         {/* SECTION 4 — SAFETY PRINCIPLES (Safe by Design. Evidence Before Confidence.) */}
-        <section id="standards" className="py-14 md:py-20">
+        <section id="standards" className="py-14 md:py-20 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="border border-border/80 rounded-2xl bg-card p-6 sm:p-8 lg:p-10 shadow-xs space-y-8">
               <div className="max-w-2xl space-y-2">
