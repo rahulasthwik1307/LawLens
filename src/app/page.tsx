@@ -4,7 +4,6 @@ import {
   Search,
   ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
   ArrowRight,
   Scale,
   Compass,
@@ -14,367 +13,334 @@ import {
   Lock,
   Layers,
   HelpCircle,
+  Landmark,
+  ExternalLink,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { DocumentLensSpecimen } from "@/components/specimen/document-lens-specimen"
+import { DistinctionSpecimen } from "@/components/specimen/distinction-specimen"
+import { CycleProgression } from "@/components/specimen/cycle-progression"
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased selection:bg-accent selection:text-accent-foreground">
-      {/* Top Application Header */}
+      {/* Redesigned Three-Group Header */}
       <Header />
 
       <main className="flex-1">
-        {/* HERO SECTION — Split Editorial Composition */}
-        <section className="relative pt-8 md:pt-14 pb-12 md:pb-20 border-b border-border/70 overflow-hidden">
+        {/* HERO SECTION — Balanced Editorial Composition with Compact Specimen */}
+        <section className="relative pt-8 md:pt-14 pb-12 md:pb-18 border-b border-border/70 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
-              {/* Left Editorial Value Proposition (Strict max 4 text elements) */}
-              <div className="lg:col-span-6 space-y-6">
-                {/* 1. Eyebrow */}
-                <div className="flex items-center gap-2">
-                  <Badge variant="jurisdiction">
-                    Jurisdiction: India (Default)
-                  </Badge>
-                  <span className="text-xs text-ink-muted hidden sm:inline">
-                    · Legal Document Navigation
-                  </span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+              {/* Left Column: Strong Editorial Message & CTAs */}
+              <div className="lg:col-span-5 xl:col-span-5 space-y-5">
+                {/* 1. Concise Eyebrow */}
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                  <span>India-First Legal Document Navigation</span>
                 </div>
 
-                {/* 2. Headline (Max 2 lines on desktop) */}
-                <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-ink-primary leading-[1.12]">
+                {/* 2. Main Headline (Editorial Serif, 2 lines desktop) */}
+                <h1 className="font-serif text-3xl sm:text-4xl lg:text-[42px] xl:text-[46px] font-bold tracking-tight text-ink-primary leading-[1.12]">
                   See what matters in your legal documents.
                 </h1>
 
-                {/* 3. Subtext (Max 20 words, max 3 lines) */}
-                <p className="text-base sm:text-lg text-ink-secondary leading-relaxed max-w-[54ch]">
-                  Transform complex contractual language into plain-language clarity, verified directly against original document evidence.
+                {/* 3. Supporting Copy (Concise, Plain Language + Grounding) */}
+                <p className="text-sm sm:text-base text-ink-secondary leading-relaxed max-w-[46ch]">
+                  Transform complex agreements into clear plain-language explanations, verified directly against original clause evidence.
                 </p>
 
-                {/* 4. CTAs (Single intent, 1 primary + 1 secondary) */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                {/* 4. Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+                  <Link
+                    href="/workspace"
+                    className="group inline-flex items-center justify-center gap-2 rounded-md bg-ink-primary text-paper hover:bg-primary px-5 h-10 text-xs sm:text-sm font-semibold tracking-wide transition-all duration-150 ease-out shadow-xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span>Start Document Intake</span>
+                    <ArrowRight className="size-3.5 transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
+                  </Link>
                   <a
                     href="#evidence"
-                    className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm px-5 h-11 text-sm md:text-base font-semibold transition-all duration-100 ease-out active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="inline-flex items-center justify-center rounded-md border border-border bg-paper hover:bg-paper-contrast/60 text-ink-primary px-4.5 h-10 text-xs sm:text-sm font-medium transition-all duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span>Inspect Evidence Model</span>
-                    <ArrowRight className="size-4 ml-1.5" />
-                  </a>
-                  <a
-                    href="#understand"
-                    className="inline-flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted hover:border-foreground/20 shadow-xs px-5 h-11 text-sm md:text-base font-medium transition-all duration-100 ease-out active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    <span>View Methodology</span>
                   </a>
                 </div>
 
-                {/* Safe Boundary Micro-Strip (Non-decorative assurance) */}
-                <div className="pt-4 border-t border-border/60 flex items-center gap-2 text-xs text-ink-muted">
-                  <ShieldCheck className="size-4 text-primary shrink-0" />
-                  <span>
-                    Legal information and preparation assistance — not a substitute for professional counsel.
-                  </span>
+                {/* 5. Credibility / Support Line */}
+                <div className="pt-3 border-t border-border/60 space-y-1">
+                  <div className="text-xs font-semibold text-ink-primary flex items-center gap-1.5">
+                    <ShieldCheck className="size-3.5 text-primary" />
+                    <span>Built for documents, not guesses.</span>
+                  </div>
+                  <p className="text-[11px] text-ink-muted leading-relaxed">
+                    Plain-language interpretation · Source verification · Action preparation
+                  </p>
                 </div>
               </div>
 
-              {/* Right: Document Inspection Lens Specimen (Interactive Preview) */}
-              <div className="lg:col-span-6" id="evidence">
+              {/* Right Column: Wide Compact Evidence Demonstration Specimen */}
+              <div className="lg:col-span-7 xl:col-span-7" id="evidence">
                 <DocumentLensSpecimen />
               </div>
             </div>
           </div>
         </section>
 
-        {/* SECTION 1 — 4-STAGE LEGAL NAVIGATION METHODOLOGY */}
-        <section id="understand" className="py-16 md:py-24 border-b border-border/70 bg-paper/40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mb-12">
-              <span className="text-xs font-mono font-semibold uppercase tracking-wider text-primary block mb-2">
+        {/* SECTION 1 — THE LAWLENS CYCLE (Understand. Verify. Act. Connect.) */}
+        <section id="understand" className="py-14 md:py-20 border-b border-border/70 bg-paper/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div className="max-w-2xl space-y-2">
+              <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary block">
                 The LawLens Cycle
               </span>
-              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-ink-primary mb-3">
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-ink-primary">
                 Understand. Verify. Act. Connect.
               </h2>
-              <p className="text-sm sm:text-base text-ink-secondary leading-relaxed">
-                LawLens rejects generic chatbot guesswork. The system moves the user systematically
-                from confusion to evidence-grounded preparation.
+              <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
+                LawLens moves systematically from confusion to evidence-grounded preparation.
+                Every conclusion originates in authentic source text before structuring practical next steps.
               </p>
             </div>
 
-            {/* Asymmetric 4-Part Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* 01. Understand */}
-              <div className="p-6 rounded-lg border border-border/80 bg-card flex flex-col justify-between space-y-4 hover:border-border transition-colors">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
-                      STAGE 01
-                    </span>
-                    <BookOpen className="size-4 text-ink-muted" />
-                  </div>
-                  <h3 className="font-serif text-lg font-bold text-ink-primary pt-1">
-                    Understand
-                  </h3>
-                  <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
-                    Translates dense contractual clauses and legal jargon into plain-language explanations while preserving the precise contractual meaning.
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-border/40 text-[11px] text-ink-muted">
-                  Focus: Language simplification without loss of nuance.
-                </div>
-              </div>
-
-              {/* 02. Verify */}
-              <div className="p-6 rounded-lg border border-primary/30 bg-primary/2 flex flex-col justify-between space-y-4 shadow-xs">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
-                      STAGE 02
-                    </span>
-                    <FileSearch className="size-4 text-primary" />
-                  </div>
-                  <h3 className="font-serif text-lg font-bold text-ink-primary pt-1">
-                    Verify
-                  </h3>
-                  <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
-                    Connects every derived finding to exact page coordinates, clause numbers, and original document excerpts. No ungrounded claims.
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-primary/20 text-[11px] text-primary font-medium">
-                  Focus: Strict evidence provenance and traceability.
-                </div>
-              </div>
-
-              {/* 03. Act */}
-              <div className="p-6 rounded-lg border border-border/80 bg-card flex flex-col justify-between space-y-4 hover:border-border transition-colors">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
-                      STAGE 03
-                    </span>
-                    <Calendar className="size-4 text-ink-muted" />
-                  </div>
-                  <h3 className="font-serif text-lg font-bold text-ink-primary pt-1">
-                    Act
-                  </h3>
-                  <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
-                    Surfaces structured action items: explicit party obligations, notice deadlines, payment schedules, and critical review points.
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-border/40 text-[11px] text-ink-muted">
-                  Focus: Obligations, dates, and actionable review items.
-                </div>
-              </div>
-
-              {/* 04. Connect */}
-              <div className="p-6 rounded-lg border border-border/80 bg-card flex flex-col justify-between space-y-4 hover:border-border transition-colors">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
-                      STAGE 04
-                    </span>
-                    <Compass className="size-4 text-ink-muted" />
-                  </div>
-                  <h3 className="font-serif text-lg font-bold text-ink-primary pt-1">
-                    Connect
-                  </h3>
-                  <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
-                    Generates structured preparation packs so users can arrive at legal consultations with organized facts, cited clauses, and specific questions.
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-border/40 text-[11px] text-ink-muted">
-                  Focus: Professional handoff and legal aid navigation.
-                </div>
-              </div>
-            </div>
+            {/* Asymmetric Progressive Cycle with Neutral Initial State */}
+            <CycleProgression />
           </div>
         </section>
 
-        {/* SECTION 2 — VISUAL DISTINCTION: ORIGINAL TEXT VS. AI EXPLANATION */}
-        <section className="py-16 md:py-20 border-b border-border/70">
+        {/* SECTION 2 — SOURCE ≠ INTERPRETATION (Original vs. Plain Explanation) */}
+        <section className="py-14 md:py-20 border-b border-border/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               <div className="lg:col-span-5 space-y-4">
-                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-primary">
-                  Non-Negotiable Design Rule
+                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary">
+                  Core Evidence Principle
                 </span>
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-ink-primary">
-                  Never blur original text with AI interpretations.
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-ink-primary leading-snug">
+                  Original legal text stays visually distinct from LawLens explanations.
                 </h2>
-                <p className="text-sm text-ink-secondary leading-relaxed">
-                  Under <strong>PRODUCT_RULES.md (Rule 8)</strong>, AI-generated explanations
-                  must never be styled like original legal instruments. Typography, margins, and borders
-                  strictly demarcate authorial source from plain-language analysis.
+                <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
+                  Every document finding preserves strict visual and typographic boundaries. You can always tell what your agreement actually says versus what LawLens explains.
                 </p>
-                <div className="space-y-2 pt-2 text-xs text-ink-secondary">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="size-4 text-emerald-700 shrink-0" />
-                    <span>Original legal documents use authoritative serif typography & exact quotations.</span>
+
+                <div className="space-y-2.5 pt-1 text-xs text-ink-secondary">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="size-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Original Contract Text:</strong> Authoritative serif typography, quotation treatment, and verbatim source metadata.
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="size-4 text-emerald-700 shrink-0" />
-                    <span>AI interpretations use contemporary sans-serif with explicit derived labels.</span>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="size-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Plain Explanations:</strong> Contemporary sans-serif typography, explicitly marked as derived analysis.
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="size-4 text-emerald-700 shrink-0" />
-                    <span>Uncertainty or missing clauses are stated directly, never fabricated.</span>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="size-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Traceable Grounding:</strong> Missing or ambiguous clauses are stated directly rather than invented.
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Visual Side-by-Side Comparison Box */}
-              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Original Document Card */}
-                <div className="p-5 rounded-lg border border-border/90 bg-background space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-border/50">
-                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-ink-muted">
-                      Original Contract Text
-                    </span>
-                    <Badge variant="subtle" size="sm">Sec. 9.1</Badge>
-                  </div>
-                  <p className="font-serif text-xs leading-relaxed italic text-ink-primary">
-                    &ldquo;Neither party shall be liable for failure to perform its obligations hereunder if such failure results from an Act of God, insurrection, or statutory restriction, provided prompt notice is given.&rdquo;
-                  </p>
-                  <div className="pt-2 text-[10px] font-mono text-ink-muted">
-                    Format: Original Binding Language
-                  </div>
-                </div>
-
-                {/* AI Explanation Card */}
-                <div className="p-5 rounded-lg border border-primary/30 bg-primary/3 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-primary/20">
-                    <span className="text-[11px] font-sans font-bold uppercase tracking-wider text-primary">
-                      LawLens Plain Explanation
-                    </span>
-                    <Badge variant="accent" size="sm">Derived</Badge>
-                  </div>
-                  <p className="font-sans text-xs leading-relaxed text-ink-primary">
-                    This is a Force Majeure clause. If unexpected major events beyond your control (like riots or new laws) stop you from performing, you aren&apos;t legally liable, but you must notify the other party immediately.
-                  </p>
-                  <div className="pt-2 text-[10px] font-sans text-primary font-medium">
-                    Format: Verified Plain Explanation
-                  </div>
-                </div>
+              {/* Side-by-Side Visual Specimen */}
+              <div className="lg:col-span-7">
+                <DistinctionSpecimen />
               </div>
             </div>
           </div>
         </section>
 
-        {/* SECTION 3 — INDIA-FIRST JURISDICTION FOUNDATION */}
-        <section id="jurisdiction" className="py-16 md:py-20 border-b border-border/70 bg-paper/50">
+        {/* SECTION 3 — INDIA-FIRST CONTEXT (Product Storytelling) */}
+        <section id="jurisdiction" className="py-14 md:py-20 border-b border-border/70 bg-paper/40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto text-center space-y-3 mb-12">
-              <Badge variant="jurisdiction" className="mx-auto">
-                Architectural Principle
-              </Badge>
+            <div className="max-w-2xl mb-10 space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-medium">
+                <Landmark className="size-3" />
+                <span>Statutory Grounding</span>
+              </div>
               <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-ink-primary">
                 Built India-First, Designed to Expand
               </h2>
-              <p className="text-sm sm:text-base text-ink-secondary leading-relaxed">
-                LawLens is deliberately engineered for Indian legal realities without hardcoding
-                jurisdiction assumptions into generic application components.
+              <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
+                LawLens starts with the legal framework users actually operate within — analyzing agreements against Indian statutory codes, standard dispute venues, and established legal aid institutions.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-card">
-                <CardHeader>
-                  <CardTitle className="text-base">Indian Statutory Context</CardTitle>
-                  <CardDescription>
-                    Contextualized against the Indian Contract Act 1872, Arbitration & Conciliation Act 1996, and Consumer Protection Act 2019.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-xs text-ink-muted">
-                  Identifies India-specific statutory limits such as Section 27 (restraint of trade) and Section 74 (liquidated damages).
-                </CardContent>
-              </Card>
+            {/* Differentiated Visual Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+              {/* Card 1: Indian Statutory Context (Wide highlight card) */}
+              <div className="md:col-span-6 lg:col-span-5 p-5 rounded-xl border border-border/80 bg-card flex flex-col justify-between space-y-4 shadow-2xs hover:border-border transition-colors">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary">
+                      Statutory Framework
+                    </span>
+                    <Scale className="size-4 text-ink-muted" />
+                  </div>
+                  <h3 className="font-serif text-base sm:text-lg font-bold text-ink-primary">
+                    Indian Statutory Context
+                  </h3>
+                  <p className="text-xs text-ink-secondary leading-relaxed">
+                    Contracts are examined against core Indian legislation to identify enforceability limits and required procedures.
+                  </p>
 
-              <Card className="bg-card">
-                <CardHeader>
-                  <CardTitle className="text-base">Explicit Jurisdiction Selector</CardTitle>
-                  <CardDescription>
-                    A visible jurisdiction context ensures the user always knows which legal regime applies to their document analysis.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-xs text-ink-muted">
-                  Prevents accidental cross-jurisdiction assumptions. Future support for additional legal jurisdictions is built into the data layer.
-                </CardContent>
-              </Card>
+                  <div className="pt-2 flex flex-wrap gap-1.5">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-paper-contrast border border-border/70 text-ink-primary">
+                      Contract Act 1872 (§27, §74)
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-paper-contrast border border-border/70 text-ink-primary">
+                      Arbitration Act 1996
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-paper-contrast border border-border/70 text-ink-primary">
+                      Consumer Protection 2019
+                    </span>
+                  </div>
+                </div>
 
-              <Card className="bg-card">
-                <CardHeader>
-                  <CardTitle className="text-base">Statutory Handoff Resources</CardTitle>
-                  <CardDescription>
-                    Prepares users with appropriate Indian legal aid pointers (e.g. NALSA, State Legal Services Authorities) when relevant.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-xs text-ink-muted">
-                  Clear guidance for users requiring professional legal representation or official institutional dispute channels.
-                </CardContent>
-              </Card>
+                <div className="pt-3 border-t border-border/50 text-[11px] text-ink-muted">
+                  Flags jurisdiction-specific realities such as void post-employment restraints.
+                </div>
+              </div>
+
+              {/* Card 2: Explicit Jurisdiction Selector (Context-control card) */}
+              <div className="md:col-span-6 lg:col-span-4 p-5 rounded-xl border border-primary/25 bg-primary/2 flex flex-col justify-between space-y-4 shadow-2xs">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary">
+                      Context Control
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                  </div>
+                  <h3 className="font-serif text-base sm:text-lg font-bold text-ink-primary">
+                    Explicit Jurisdiction Selector
+                  </h3>
+                  <p className="text-xs text-ink-secondary leading-relaxed">
+                    Every analysis operates under an explicit jurisdiction context so the system never silently applies foreign law assumptions.
+                  </p>
+
+                  {/* UI Preview Pill */}
+                  <div className="p-2.5 rounded-lg border border-primary/20 bg-background/80 flex items-center justify-between text-xs">
+                    <span className="text-ink-muted text-[11px]">Selected Regime:</span>
+                    <span className="font-semibold text-primary flex items-center gap-1.5 text-[11px]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                      Republic of India (Default)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-primary/15 text-[11px] text-primary font-medium">
+                  Prevents accidental cross-border legal confusion.
+                </div>
+              </div>
+
+              {/* Card 3: Statutory Handoff Resources (Resource card) */}
+              <div className="md:col-span-12 lg:col-span-3 p-5 rounded-xl border border-border/80 bg-card flex flex-col justify-between space-y-4 shadow-2xs hover:border-border transition-colors">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary">
+                      Handoff Portals
+                    </span>
+                    <ExternalLink className="size-3.5 text-ink-muted" />
+                  </div>
+                  <h3 className="font-serif text-base sm:text-lg font-bold text-ink-primary">
+                    Statutory Handoff
+                  </h3>
+                  <p className="text-xs text-ink-secondary leading-relaxed">
+                    Connects users to authoritative legal aid institutions and dispute resolution channels when formal assistance is required.
+                  </p>
+
+                  <ul className="space-y-1.5 text-xs text-ink-secondary">
+                    <li className="flex items-center gap-1.5 text-[11px]">
+                      <span className="w-1 h-1 rounded-full bg-primary" />
+                      <span>NALSA (National Legal Services)</span>
+                    </li>
+                    <li className="flex items-center gap-1.5 text-[11px]">
+                      <span className="w-1 h-1 rounded-full bg-primary" />
+                      <span>State Legal Services Authorities</span>
+                    </li>
+                    <li className="flex items-center gap-1.5 text-[11px]">
+                      <span className="w-1 h-1 rounded-full bg-primary" />
+                      <span>National Consumer Helpline</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="pt-3 border-t border-border/50 text-[11px] text-ink-muted">
+                  Official dispute redressal and legal aid pathways.
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* SECTION 4 — FOUNDATIONAL COMMITMENTS & SAFETY BOUNDARIES */}
-        <section id="standards" className="py-16 md:py-20">
+        {/* SECTION 4 — SAFETY PRINCIPLES (Safe by Design. Evidence Before Confidence.) */}
+        <section id="standards" className="py-14 md:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="border border-border/80 rounded-xl bg-card p-6 md:p-10 shadow-xs">
-              <div className="max-w-3xl mb-8 space-y-2">
-                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-primary">
-                  Engineering Safety Standards
+            <div className="border border-border/80 rounded-2xl bg-card p-6 sm:p-8 lg:p-10 shadow-xs space-y-8">
+              <div className="max-w-2xl space-y-2">
+                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary block">
+                  Trust & Governance
                 </span>
                 <h2 className="font-serif text-2xl sm:text-3xl font-bold text-ink-primary">
-                  Safe, Responsible, and Untrusted by Design
+                  Safe by Design. Evidence Before Confidence.
                 </h2>
-                <p className="text-sm text-ink-secondary leading-relaxed">
-                  In compliance with <strong>PRODUCT_RULES.md</strong> and <strong>EVALUATION.md</strong>,
-                  every LawLens interaction operates under strict engineering safety guarantees:
+                <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
+                  LawLens is engineered to ensure every finding is verifiable, user agency is strictly preserved, and document text is treated with uncompromising security boundaries.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs text-ink-secondary">
-                <div className="space-y-2 p-4 rounded-md bg-paper-contrast/40 border border-border/50">
-                  <div className="flex items-center gap-2 font-semibold text-ink-primary">
-                    <Lock className="size-4 text-primary" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 text-xs text-ink-secondary">
+                <div className="space-y-2.5 p-4.5 rounded-xl bg-paper-contrast/40 border border-border/60">
+                  <div className="flex items-center gap-2 font-semibold text-ink-primary text-xs">
+                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">
+                      <Lock className="size-3.5" />
+                    </div>
                     <span>Documents are Data</span>
                   </div>
-                  <p className="leading-relaxed">
-                    Uploaded document text is strictly treated as untrusted data to analyze. Embedded prompt-injection attempts cannot override application rules.
+                  <p className="leading-relaxed text-[11px]">
+                    Uploaded document text is strictly treated as untrusted data to analyze. Embedded prompt-injection attempts cannot alter application behavior or access internal rules.
                   </p>
                 </div>
 
-                <div className="space-y-2 p-4 rounded-md bg-paper-contrast/40 border border-border/50">
-                  <div className="flex items-center gap-2 font-semibold text-ink-primary">
-                    <ShieldCheck className="size-4 text-primary" />
+                <div className="space-y-2.5 p-4.5 rounded-xl bg-paper-contrast/40 border border-border/60">
+                  <div className="flex items-center gap-2 font-semibold text-ink-primary text-xs">
+                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">
+                      <ShieldCheck className="size-3.5" />
+                    </div>
                     <span>Zero Autonomous Actions</span>
                   </div>
-                  <p className="leading-relaxed">
-                    LawLens never automatically files court motions, sends binding notices, or makes legal decisions. User agency is strictly preserved.
+                  <p className="leading-relaxed text-[11px]">
+                    LawLens never automatically files court motions, sends legal notices, or makes binding contractual decisions. The user retains complete agency at every step.
                   </p>
                 </div>
 
-                <div className="space-y-2 p-4 rounded-md bg-paper-contrast/40 border border-border/50">
-                  <div className="flex items-center gap-2 font-semibold text-ink-primary">
-                    <HelpCircle className="size-4 text-primary" />
+                <div className="space-y-2.5 p-4.5 rounded-xl bg-paper-contrast/40 border border-border/60">
+                  <div className="flex items-center gap-2 font-semibold text-ink-primary text-xs">
+                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">
+                      <HelpCircle className="size-3.5" />
+                    </div>
                     <span>Honest Uncertainty</span>
                   </div>
-                  <p className="leading-relaxed">
-                    When document evidence is incomplete or ambiguous, LawLens states the limitation clearly instead of hallucinating confident advice.
+                  <p className="leading-relaxed text-[11px]">
+                    When document evidence is incomplete, ambiguous, or unstated, LawLens surfaces the limitation directly rather than fabricating confident answers.
                   </p>
                 </div>
 
-                <div className="space-y-2 p-4 rounded-md bg-paper-contrast/40 border border-border/50">
-                  <div className="flex items-center gap-2 font-semibold text-ink-primary">
-                    <Scale className="size-4 text-primary" />
+                <div className="space-y-2.5 p-4.5 rounded-xl bg-paper-contrast/40 border border-border/60">
+                  <div className="flex items-center gap-2 font-semibold text-ink-primary text-xs">
+                    <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">
+                      <Scale className="size-3.5" />
+                    </div>
                     <span>Professional Boundary</span>
                   </div>
-                  <p className="leading-relaxed">
-                    The platform exists to prepare users for high-quality consultations with qualified advocates, never to pretend to replace legal counsel.
+                  <p className="leading-relaxed text-[11px]">
+                    LawLens produces structured preparation packs to help users have more productive consultations with qualified advocates, never pretending to replace them.
                   </p>
                 </div>
               </div>
@@ -383,7 +349,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Application Footer */}
+      {/* Redesigned Minimal Footer */}
       <Footer />
     </div>
   )

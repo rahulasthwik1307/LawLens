@@ -2,95 +2,89 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ShieldCheck, Compass, Scale, Menu, X, ChevronDown } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Scale, Menu, X, ArrowRight } from "lucide-react"
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/95 backdrop-blur-xs transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Brand identity */}
+    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/90 backdrop-blur-md transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-4">
+        {/* Left: LawLens Brand Group */}
         <div className="flex items-center gap-3">
           <Link
             href="/"
             className="group flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
           >
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground shadow-xs group-hover:bg-primary/90 transition-colors">
-              <Scale className="size-4" strokeWidth={2} />
+            <div className="w-7.5 h-7.5 rounded-md bg-ink-primary flex items-center justify-center text-paper shadow-2xs group-hover:bg-primary transition-colors duration-150">
+              <Scale className="size-3.5 text-paper" strokeWidth={2.2} />
             </div>
             <div className="flex flex-col">
-              <span className="font-serif font-bold text-lg leading-tight tracking-tight text-ink-primary">
+              <span className="font-serif font-bold text-lg leading-none tracking-tight text-ink-primary">
                 LawLens
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-ink-muted font-medium">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-ink-muted font-semibold mt-0.5">
                 See what matters
               </span>
             </div>
           </Link>
-
-          {/* Jurisdiction indicator - Non-negotiable Principle 1 & 2 */}
-          <div className="hidden md:flex items-center ml-2 pl-3 border-l border-border/60">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              <span>Jurisdiction: <strong>India</strong></span>
-              <span className="text-[10px] text-ink-muted">(Default)</span>
-            </div>
-          </div>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-ink-secondary">
+        {/* Center: Primary Navigation */}
+        <nav className="hidden md:flex items-center gap-7 text-xs tracking-wide text-ink-secondary" aria-label="Main Navigation">
+          <Link
+            href="/workspace"
+            className="hover:text-primary font-semibold text-primary transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1"
+          >
+            Document Workspace
+          </Link>
           <a
-            href="#understand"
-            className="hover:text-ink-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm px-1 py-0.5"
+            href="/#understand"
+            className="hover:text-ink-primary font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1"
           >
             Methodology
           </a>
           <a
-            href="#evidence"
-            className="hover:text-ink-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm px-1 py-0.5"
+            href="/#evidence"
+            className="hover:text-ink-primary font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1"
           >
             Evidence Model
           </a>
           <a
-            href="#jurisdiction"
-            className="hover:text-ink-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm px-1 py-0.5"
+            href="/#jurisdiction"
+            className="hover:text-ink-primary font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs py-1"
           >
-            India-First Scope
-          </a>
-          <a
-            href="#standards"
-            className="hover:text-ink-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm px-1 py-0.5"
-          >
-            Product Standards
+            India-First
           </a>
         </nav>
 
-        {/* Right CTA / Action */}
+        {/* Right: Refined Contextual Control + Primary CTA */}
         <div className="hidden sm:flex items-center gap-3">
-          <a
-            href="#evidence"
-            className="inline-flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted hover:border-foreground/20 shadow-xs text-xs h-8 px-3 font-medium transition-all duration-100 ease-out active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          {/* Subtle Contextual Jurisdiction Control */}
+          <div
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border/80 bg-paper-contrast/60 text-[11px] font-medium text-ink-secondary select-none"
+            title="Active Legal Regime: India (Default)"
           >
-            <Compass className="size-3.5 mr-1" />
-            Inspect Lens Specimen
-          </a>
-          <a
-            href="#understand"
-            className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs text-xs h-8 px-3 font-semibold transition-all duration-100 ease-out active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+            <span className="text-ink-muted">Jurisdiction:</span>
+            <span className="font-semibold text-ink-primary">India</span>
+          </div>
+
+          {/* Redesigned Premium CTA */}
+          <Link
+            href="/workspace"
+            className="group inline-flex items-center justify-center gap-1.5 rounded-md bg-ink-primary text-paper hover:bg-primary px-3.5 h-8 text-xs font-semibold tracking-wide transition-all duration-150 ease-out shadow-2xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Explore System
-          </a>
+            <span>Open Workspace</span>
+            <ArrowRight className="size-3.5 transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
+          </Link>
         </div>
 
-        {/* Mobile menu button */}
-        <div className="flex sm:hidden items-center">
+        {/* Mobile Hamburger Button */}
+        <div className="flex md:hidden items-center">
           <button
             type="button"
-            className="p-2 rounded-md text-ink-secondary hover:text-ink-primary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="p-1.5 rounded-md text-ink-secondary hover:text-ink-primary hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle navigation menu"
             aria-expanded={mobileMenuOpen}
@@ -100,51 +94,63 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile navigation panel */}
+      {/* Mobile Navigation Panel */}
       {mobileMenuOpen && (
-        <div className="sm:hidden border-t border-border/80 bg-background px-4 pt-3 pb-5 space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-border/50">
-            <span className="text-xs text-ink-muted">Active Context:</span>
-            <Badge variant="jurisdiction">India (Default)</Badge>
+        <div className="md:hidden border-t border-border/80 bg-background/98 px-5 pt-3.5 pb-5 space-y-3.5 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="flex items-center justify-between pb-2.5 border-b border-border/60">
+            <span className="text-xs text-ink-muted">Active Jurisdiction</span>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-emerald-600/30 bg-emerald-500/10 text-emerald-800 text-[11px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+              <span>India (Default)</span>
+            </div>
           </div>
           <nav className="flex flex-col space-y-2 text-sm font-medium text-ink-secondary">
+            <Link
+              href="/workspace"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-1.5 text-primary font-semibold hover:text-ink-primary flex items-center justify-between"
+            >
+              <span>Document Workspace</span>
+              <ArrowRight className="size-4" />
+            </Link>
             <a
-              href="#understand"
+              href="/#understand"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1.5 hover:text-ink-primary"
             >
               Methodology
             </a>
             <a
-              href="#evidence"
+              href="/#evidence"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1.5 hover:text-ink-primary"
             >
               Evidence Model
             </a>
             <a
-              href="#jurisdiction"
+              href="/#jurisdiction"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1.5 hover:text-ink-primary"
             >
               India-First Scope
             </a>
             <a
-              href="#standards"
+              href="/#standards"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1.5 hover:text-ink-primary"
+              className="py-1.5 hover:text-ink-primary text-xs text-ink-muted"
             >
-              Product Standards
+              Safety Principles
             </a>
           </nav>
-          <div className="pt-2 flex flex-col gap-2">
-            <a
-              href="#evidence"
+          <div className="pt-2">
+            <Link
+              href="/workspace"
               onClick={() => setMobileMenuOpen(false)}
-              className="inline-flex items-center justify-center w-full rounded-md bg-primary text-primary-foreground text-xs font-semibold h-9 px-4"
+              className="inline-flex items-center justify-center w-full gap-2 rounded-md bg-ink-primary text-paper text-xs font-semibold h-9 px-4 active:scale-[0.98] transition-all"
             >
-              Inspect Lens Specimen
-            </a>
+              <span>Open Workspace</span>
+              <ArrowRight className="size-3.5" />
+            </Link>
           </div>
         </div>
       )}

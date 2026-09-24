@@ -103,3 +103,55 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Dedicated Print Layout for LawLens Professional Preparation Pack */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  /* Hide interactive application headers, navigation bars, and buttons */
+  header,
+  nav,
+  .print-hide,
+  button,
+  input,
+  [role="tablist"],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Allow print container to take full page width without two-column workspace splits */
+  .lg\:grid-cols-12 {
+    display: block !important;
+  }
+
+  .lg\:col-span-7 {
+    display: none !important; /* Hide left Document Viewer in print to focus exclusively on the Preparation Pack */
+  }
+
+  .lg\:col-span-5 {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .print-container {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* High-contrast and clean line rendering for print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

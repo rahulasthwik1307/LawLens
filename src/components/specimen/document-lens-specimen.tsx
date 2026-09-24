@@ -1,34 +1,20 @@
 "use client"
 
 import * as React from "react"
-import {
-  FileText,
-  Search,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  ChevronRight,
-  ShieldAlert,
-  ArrowRight,
-  Sparkles,
-  BookmarkCheck,
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { FileText, Sparkles, CheckCircle2, ArrowRight, ShieldCheck, Scale } from "lucide-react"
 
 interface ClauseSpecimen {
   id: string
   label: string
-  category: "Obligation" | "Dispute" | "Review Point"
-  badgeVariant: "default" | "accent" | "attention" | "critical"
+  category: "Obligation" | "Dispute Venue" | "Statutory Review"
   documentTitle: string
   clauseNumber: string
   clauseHeading: string
   originalText: string
   pageRef: string
   explanation: string
-  jurisdictionNote: string
-  actions: string[]
+  statutoryGrounding: string
+  lineCoordinates: string
 }
 
 const SPECIMENS: ClauseSpecimen[] = [
@@ -36,63 +22,49 @@ const SPECIMENS: ClauseSpecimen[] = [
     id: "termination",
     label: "Early Termination",
     category: "Obligation",
-    badgeVariant: "accent",
     documentTitle: "Commercial Lease Agreement",
     clauseNumber: "Clause 14.2",
     clauseHeading: "Early Termination & Liquidated Damages",
     originalText:
       "Either party may terminate this Agreement prior to expiry of the Term by providing not less than thirty (30) days prior written notice. Upon premature termination by Lessee without Lessor default, Lessee shall pay liquidated damages equivalent to two (2) months base rent.",
-    pageRef: "Page 4 · Sec. 14.2 · Paragraph 1",
+    pageRef: "Page 4 · Sec. 14.2",
+    lineCoordinates: "Lines 142–148",
     explanation:
-      "You can terminate this agreement early by providing 30 days written notice. However, if you leave without landlord default, you are contractually required to pay a departure fee equal to 2 months rent.",
-    jurisdictionNote:
-      "Under Indian Contract Act, 1872 (Section 74), liquidated damages clauses generally require proof of genuine pre-estimated loss rather than punitive penalties.",
-    actions: [
-      "Track mandatory 30-day written notice requirement",
-      "Verify formal notice address listed in Schedule A",
-      "Prepare liquidated damages point for legal consultation",
-    ],
+      "You can terminate early with 30 days written notice. However, leaving without landlord default contractually requires paying a departure fee equal to 2 months rent.",
+    statutoryGrounding:
+      "Indian Contract Act, 1872 (§74): Liquidated damages clauses require proof of genuine pre-estimated loss rather than arbitrary penalty.",
   },
   {
     id: "arbitration",
     label: "Arbitration Seat",
-    category: "Dispute",
-    badgeVariant: "default",
+    category: "Dispute Venue",
     documentTitle: "Master Services Agreement",
     clauseNumber: "Clause 22.1",
-    clauseHeading: "Dispute Resolution & Seat of Arbitration",
+    clauseHeading: "Dispute Resolution & Seat",
     originalText:
       "Any dispute arising out of or in connection with this Contract shall be resolved by arbitration in accordance with the Arbitration and Conciliation Act, 1996. The seat and venue of arbitration shall be Bengaluru, India, and proceedings shall be conducted in English.",
-    pageRef: "Page 11 · Sec. 22.1 · Paragraph 2",
+    pageRef: "Page 11 · Sec. 22.1",
+    lineCoordinates: "Lines 310–316",
     explanation:
-      "Disputes cannot be taken directly to regular court; they must be resolved via formal arbitration in Bengaluru under Indian arbitration law.",
-    jurisdictionNote:
-      "Selecting Bengaluru as the 'Seat' vests supervisory court jurisdiction exclusively with the High Court of Karnataka.",
-    actions: [
-      "Confirm arbitration costs and procedural rules",
-      "Note Bengaluru territorial jurisdiction for filings",
-    ],
+      "Disputes cannot be filed in regular civil court; they must be resolved through binding arbitration in Bengaluru under Indian arbitration law.",
+    statutoryGrounding:
+      "Arbitration and Conciliation Act, 1996: Naming Bengaluru as 'Seat' vests supervisory court jurisdiction exclusively with the High Court of Karnataka.",
   },
   {
     id: "noncompete",
     label: "Non-Compete Scope",
-    category: "Review Point",
-    badgeVariant: "critical",
+    category: "Statutory Review",
     documentTitle: "Executive Employment Contract",
     clauseNumber: "Clause 8.3",
-    clauseHeading: "Post-Termination Restraint of Trade",
+    clauseHeading: "Post-Termination Restraint",
     originalText:
       "The Employee covenants that for a period of twelve (12) months following termination of employment, Employee shall not directly or indirectly engage in any business competing with the Employer within the territory of India.",
-    pageRef: "Page 6 · Sec. 8.3 · Paragraph 1",
+    pageRef: "Page 6 · Sec. 8.3",
+    lineCoordinates: "Lines 188–194",
     explanation:
-      "The contract attempts to prohibit you from working for any competitor anywhere in India for 1 year after your employment ends.",
-    jurisdictionNote:
-      "Section 27 of the Indian Contract Act, 1872 renders post-employment covenants in restraint of trade void, unlike some common law jurisdictions.",
-    actions: [
-      "Highlight Section 27 Indian Contract Act precedent",
-      "Include clause in Human Handoff preparation pack",
-      "Seek advice from employment advocate before signing",
-    ],
+      "The clause attempts to prohibit you from working for any competitor anywhere in India for 1 full year after your employment concludes.",
+    statutoryGrounding:
+      "Indian Contract Act, 1872 (§27): Post-employment covenants in restraint of trade are typically void under Indian law, unlike in some foreign jurisdictions.",
   },
 ]
 
@@ -102,31 +74,36 @@ export function DocumentLensSpecimen() {
 
   return (
     <div className="rounded-xl border border-border/80 bg-paper shadow-xs overflow-hidden transition-all duration-200">
-      {/* Specimen Header & Selector Bar */}
-      <div className="border-b border-border/70 bg-paper-contrast/40 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      {/* Specimen Header & Compact Clause Selector */}
+      <div className="border-b border-border/70 bg-paper-contrast/50 px-3.5 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-ink-primary">
-            Interactive Document Lens Specimen
+          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-ink-primary">
+            Interactive Document Lens
           </span>
-          <span className="text-[11px] text-ink-muted hidden sm:inline">
-            (Evidence Grounding Demonstration)
+          <span className="text-[10px] text-ink-muted hidden md:inline">
+            · Evidence Grounding Demo
           </span>
         </div>
 
-        {/* Clause switch pills */}
-        <div className="flex items-center gap-1.5 p-0.5 rounded-lg bg-background border border-border/60">
+        {/* Clause Switcher Tabs */}
+        <div
+          role="tablist"
+          aria-label="Document Clause Specimens"
+          className="flex items-center gap-1 p-0.5 rounded-lg bg-background/80 border border-border/70"
+        >
           {SPECIMENS.map((specimen) => {
             const isSelected = specimen.id === activeId
             return (
               <button
                 key={specimen.id}
-                type="button"
+                role="tab"
+                aria-selected={isSelected}
                 onClick={() => setActiveId(specimen.id)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-100 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   isSelected
-                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                    : "text-ink-secondary hover:text-ink-primary hover:bg-muted/50"
+                    ? "bg-ink-primary text-paper shadow-2xs font-semibold"
+                    : "text-ink-secondary hover:text-ink-primary hover:bg-muted/60"
                 }`}
               >
                 {specimen.label}
@@ -136,104 +113,90 @@ export function DocumentLensSpecimen() {
         </div>
       </div>
 
-      {/* Main Specimen Comparison Surface */}
-      <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Original Legal Document Fragment */}
-        <div className="lg:col-span-6 flex flex-col space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="size-4 text-ink-muted" />
-              <span className="text-xs font-mono font-semibold uppercase tracking-wide text-ink-secondary">
-                Original Legal Document
+      {/* Main Specimen Demonstration Surface (Original Clause ➔ Plain Explanation) */}
+      <div
+        key={activeSpecimen.id}
+        className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-5 animate-in fade-in duration-200"
+      >
+        {/* Left: Original Legal Excerpt */}
+        <div className="md:col-span-6 flex flex-col justify-between p-3.5 sm:p-4 rounded-lg border border-border/80 bg-background/70 space-y-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px]">
+              <div className="flex items-center gap-1.5 text-ink-muted">
+                <FileText className="size-3 text-ink-muted shrink-0" />
+                <span className="font-sans font-medium truncate max-w-44">
+                  {activeSpecimen.documentTitle}
+                </span>
+              </div>
+              <span className="font-mono text-primary font-semibold text-[10px] bg-primary/8 px-1.5 py-0.5 rounded">
+                {activeSpecimen.clauseNumber}
               </span>
             </div>
-            <Badge variant="subtle" size="sm" className="font-mono">
-              {activeSpecimen.pageRef}
-            </Badge>
-          </div>
 
-          {/* Authentic Document Excerpt Container */}
-          <div className="relative flex-1 p-4 sm:p-5 rounded-lg border border-border/90 bg-background font-serif text-sm leading-relaxed text-ink-primary shadow-2xs">
-            <div className="mb-2.5 pb-2 border-b border-border/50 flex items-center justify-between text-xs text-ink-muted">
-              <span className="font-sans font-medium">{activeSpecimen.documentTitle}</span>
-              <span className="font-mono font-semibold text-primary">{activeSpecimen.clauseNumber}</span>
-            </div>
-            <h4 className="font-bold text-sm mb-2 text-ink-primary">
+            <div className="text-xs font-semibold text-ink-primary">
               {activeSpecimen.clauseHeading}
-            </h4>
-            <p className="italic text-ink-secondary bg-paper-contrast/40 p-3 rounded border-l-2 border-primary/50 text-[13px] leading-relaxed">
+            </div>
+
+            <p className="font-serif italic text-xs leading-relaxed text-ink-primary/90 bg-paper-contrast/40 p-2.5 rounded border-l-2 border-primary/60">
               &ldquo;{activeSpecimen.originalText}&rdquo;
             </p>
-            <div className="mt-3 flex items-center gap-2 text-[11px] text-ink-muted">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-              <span>Exact contractual excerpt preserved without modification</span>
-            </div>
+          </div>
+
+          <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[10px] text-ink-muted font-mono">
+            <span>{activeSpecimen.pageRef}</span>
+            <span className="text-emerald-700 font-sans font-medium flex items-center gap-1">
+              <CheckCircle2 className="size-3" />
+              <span>Verbatim Source</span>
+            </span>
           </div>
         </div>
 
-        {/* Right: LawLens Analysis & Evidence Connection */}
-        <div className="lg:col-span-6 flex flex-col space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Search className="size-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-                LawLens Plain Explanation & Evidence
+        {/* Right: LawLens Plain Explanation & Statutory Context */}
+        <div className="md:col-span-6 flex flex-col justify-between p-3.5 sm:p-4 rounded-lg border border-primary/25 bg-primary/2 space-y-3">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-[11px]">
+              <div className="flex items-center gap-1.5 font-semibold text-primary">
+                <Sparkles className="size-3 text-primary shrink-0" />
+                <span className="uppercase tracking-wider text-[10px]">Plain Explanation</span>
+              </div>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-primary/20 bg-primary/10 text-primary">
+                {activeSpecimen.category}
               </span>
             </div>
-            <Badge variant={activeSpecimen.badgeVariant} size="sm">
-              {activeSpecimen.category}
-            </Badge>
+
+            <p className="font-sans text-xs text-ink-primary leading-relaxed font-normal">
+              {activeSpecimen.explanation}
+            </p>
+
+            <div className="pt-2 border-t border-primary/15 space-y-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block font-semibold">
+                Statutory Context
+              </span>
+              <p className="text-[11px] text-ink-secondary leading-snug">
+                {activeSpecimen.statutoryGrounding}
+              </p>
+            </div>
           </div>
 
-          {/* Plain language explanation box */}
-          <div className="flex-1 space-y-3">
-            <div className="p-4 sm:p-5 rounded-lg border border-primary/20 bg-primary/3 space-y-3">
-              <div>
-                <span className="text-[11px] uppercase tracking-wider font-semibold text-primary block mb-1">
-                  Plain-Language Meaning
-                </span>
-                <p className="text-xs sm:text-sm text-ink-primary leading-relaxed">
-                  {activeSpecimen.explanation}
-                </p>
-              </div>
-
-              {/* Jurisdiction context note */}
-              <div className="pt-2 border-t border-primary/10">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-ink-muted block mb-0.5">
-                  India Jurisdiction Context
-                </span>
-                <p className="text-[11px] text-ink-secondary leading-normal">
-                  {activeSpecimen.jurisdictionNote}
-                </p>
-              </div>
-            </div>
-
-            {/* Actionable Review Checklist Items */}
-            <div className="p-3.5 rounded-lg border border-border/80 bg-card space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-primary block">
-                Derived Action & Review Items
-              </span>
-              <ul className="space-y-1.5">
-                {activeSpecimen.actions.map((act, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-xs text-ink-secondary">
-                    <CheckCircle2 className="size-3.5 text-primary shrink-0 mt-0.5" />
-                    <span>{act}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="pt-2 border-t border-primary/15 flex items-center justify-between text-[10px] text-ink-muted">
+            <span className="font-mono text-primary font-medium">{activeSpecimen.lineCoordinates}</span>
+            <span className="text-ink-secondary font-medium">Evidence Grounded</span>
           </div>
         </div>
       </div>
 
-      {/* Provenance Footer */}
-      <div className="border-t border-border/70 bg-paper-contrast/30 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink-muted">
-        <div className="flex items-center gap-2">
-          <BookmarkCheck className="size-3.5 text-emerald-700" />
-          <span>Core Flow: <strong>Finding → Explanation → Evidence → Source</strong></span>
+      {/* Provenance Strip */}
+      <div className="border-t border-border/70 bg-paper-contrast/30 px-3.5 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink-muted">
+        <div className="flex items-center gap-1.5 text-ink-secondary">
+          <span className="font-semibold text-primary font-mono text-[10px]">PROVENANCE</span>
+          <span>Source Clause</span>
+          <ArrowRight className="size-2.5 text-ink-muted" />
+          <span>Verified Evidence</span>
+          <ArrowRight className="size-2.5 text-ink-muted" />
+          <span className="font-medium text-ink-primary">Plain Meaning</span>
         </div>
-        <span className="text-ink-secondary font-medium">
-          Source verifiable against original document page & clause coordinates
+        <span className="text-[10px] font-mono text-ink-muted">
+          Coordinates preserved without hallucination
         </span>
       </div>
     </div>
