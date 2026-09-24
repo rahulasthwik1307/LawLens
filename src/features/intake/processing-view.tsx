@@ -94,7 +94,7 @@ export function ProcessingView({ document, onComplete, onCancel }: ProcessingVie
           </div>
         </div>
         <Badge variant="outline" size="sm" className="font-mono">
-          Phase 2 Ingestion
+          Document Intake
         </Badge>
       </div>
 

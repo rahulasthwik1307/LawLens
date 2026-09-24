@@ -15,7 +15,7 @@ import {
   verifyActionItem,
 } from "../services/ai/evidence-validator.ts"
 import { LawLensAIService } from "../services/ai/ai-service.ts"
-import { GeminiLegalAnalysisProvider } from "../services/ai/providers/gemini-provider.ts"
+import { GroqLegalAnalysisProvider } from "../services/ai/providers/groq-provider.ts"
 import { SAMPLE_DOCUMENTS } from "../lib/sample-documents.ts"
 import type {
   ActionGenerationRequest,
@@ -342,8 +342,8 @@ test("Action Layer — Insufficient evidence returns empty actions or unverified
 })
 
 // 13. Missing API key handled safely
-test("Provider Failure — Missing API key in Gemini provider throws safe 503 error", async () => {
-  const provider = new GeminiLegalAnalysisProvider("", "gemini-3.5-flash-lite")
+test("Provider Failure — Missing API key in Groq provider throws safe 503 error", async () => {
+  const provider = new GroqLegalAnalysisProvider("")
 
   await assert.rejects(
     async () => {

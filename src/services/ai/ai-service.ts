@@ -32,13 +32,13 @@ import {
   extractCandidatesFromFindings,
   synthesizeActionsDeterministically,
 } from "./action-extractor.ts"
-import { GeminiLegalAnalysisProvider } from "./providers/gemini-provider.ts"
+import { GroqLegalAnalysisProvider } from "./providers/groq-provider.ts"
 
 export class LawLensAIService {
   private readonly provider: LegalAnalysisProvider
 
   constructor(provider?: LegalAnalysisProvider) {
-    this.provider = provider || new GeminiLegalAnalysisProvider()
+    this.provider = provider || new GroqLegalAnalysisProvider()
   }
 
   get providerId(): string {
@@ -275,6 +275,10 @@ export class LawLensAIService {
 
     // 2. Stage 1: Deterministic Clause Alignment
     const alignment = buildAlignedComparisonContext(normalizedA, normalizedB)
+
+    console.info(
+      `[AI Service] Clause alignment complete: alignedClauseCount=${alignment.alignedClauseCount} addedClauseCount=${alignment.addedClauseCount} removedClauseCount=${alignment.removedClauseCount}`
+    )
 
     // 3. Stage 2: Provider comparison call
     const rawOutput = await this.provider.compareDocuments({

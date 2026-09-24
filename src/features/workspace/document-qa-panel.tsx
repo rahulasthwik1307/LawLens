@@ -53,22 +53,14 @@ export function DocumentQAPanel({
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [internalHistory, setInternalHistory] = React.useState<DocumentQAResult[]>([])
   const history = externalHistory !== undefined ? externalHistory : internalHistory
-  const setHistory = React.useCallback(
-    (historyUpdater: DocumentQAResult[] | ((prev: DocumentQAResult[]) => DocumentQAResult[])) => {
-      if (typeof historyUpdater === "function") {
-        setInternalHistory((prev) => {
-          const current = externalHistory !== undefined ? externalHistory : prev
-          const updated = historyUpdater(current)
-          onQAHistoryChange?.(updated)
-          return updated
-        })
-      } else {
-        setInternalHistory(historyUpdater)
-        onQAHistoryChange?.(historyUpdater)
-      }
-    },
-    [externalHistory, onQAHistoryChange]
-  )
+
+  const handleClearHistory = React.useCallback(() => {
+    if (onQAHistoryChange) {
+      onQAHistoryChange([])
+    } else {
+      setInternalHistory([])
+    }
+  }, [onQAHistoryChange])
 
   const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -127,7 +119,12 @@ export function DocumentQAPanel({
 
       const result = data as DocumentQAResult
       // Prepend to history so latest question appears first
-      setHistory((prev) => [result, ...prev])
+      const updatedHistory = [result, ...history]
+      if (onQAHistoryChange) {
+        onQAHistoryChange(updatedHistory)
+      } else {
+        setInternalHistory(updatedHistory)
+      }
       setQuestion("")
     } catch {
       setErrorMessage(
@@ -169,7 +166,7 @@ export function DocumentQAPanel({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setHistory([])}
+              onClick={handleClearHistory}
               className="h-7 text-xs text-ink-muted hover:text-ink-primary gap-1"
             >
               <Trash2 className="size-3" />
@@ -201,7 +198,7 @@ export function DocumentQAPanel({
         </label>
 
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+          <div className="relative flex-1 text-ink-primary">
             <Search className="size-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               id="qa-question-input"
@@ -216,7 +213,7 @@ export function DocumentQAPanel({
                   ? "e.g. When can the lessor terminate this agreement?"
                   : "Document text extraction required to ask questions."
               }
-              className="w-full pl-9 pr-4 py-2 text-xs md:text-sm rounded-lg bg-paper border border-border text-ink-primary placeholder:text-ink-muted/70 focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full pl-9 pr-4 py-2 text-xs md:text-sm rounded-lg bg-paper border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -297,7 +294,7 @@ export function DocumentQAPanel({
                 }`}
               />
               <span className={loadingStep === 1 ? "font-semibold text-ink-primary" : ""}>
-                Synthesizing evidence with Gemini 3.5 Flash Lite...
+                Synthesizing evidence with Groq GPT-OSS...
               </span>
             </div>
             <div className="flex items-center gap-2">

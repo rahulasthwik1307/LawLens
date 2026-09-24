@@ -64,7 +64,7 @@ export async function processLocalFile(
     } else {
       // For binary formats (PDF/DOCX) in Phase 2, provide an honest safe structural container
       // Note: Full client-side PDF/DOCX rendering is in subsequent phases; we preserve file integrity
-      content = `[Safe Document Container: ${file.name}]\nFormat: ${file.type || extension.toUpperCase()}\nSize: ${(file.size / 1024).toFixed(1)} KB\n\nNotice: This is a binary legal file (${extension.toUpperCase()}). In Phase 2, file metadata and intake boundaries are verified. Full text extraction pipeline will activate in subsequent phases. To inspect live text analysis, try uploading a .TXT or .MD document, or load one of the authentic Indian sample agreements.`
+      content = `[Safe Document Container: ${file.name}]\nFormat: ${file.type || extension.toUpperCase()}\nSize: ${(file.size / 1024).toFixed(1)} KB\n\nNotice: This is a binary legal file (${extension.toUpperCase()}). File metadata and intake boundaries are verified. Full server-side extraction pipeline is required for this format. To inspect live text analysis immediately, try uploading a .TXT or .MD document, or load one of the authentic Indian sample agreements.`
       lineCount = 6
       wordCount = content.trim().split(/\s+/).length
     }

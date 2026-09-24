@@ -841,7 +841,7 @@ export function PreparationPackPanel({
         <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden shadow-xs">
           <div className="space-y-0.5">
             <span className="font-mono text-[10px] font-semibold text-primary uppercase tracking-wider">
-              Phase 8 · Where to Go Next
+              Next Steps · Legal Resources & Handoff
             </span>
             <p className="text-xs text-ink-primary font-medium">
               Explore verified statutory portals, legal aid criteria, and consultation guidance.

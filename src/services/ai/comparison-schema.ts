@@ -14,19 +14,25 @@ export const RawDifferenceEvidenceSchema = z.object({
     .coerce
     .number()
     .int()
+    .nullable()
     .optional()
     .transform((val) => (typeof val === "number" && val > 0 ? val : undefined)),
   endLine: z
     .coerce
     .number()
     .int()
+    .nullable()
     .optional()
     .transform((val) => (typeof val === "number" && val > 0 ? val : undefined)),
 })
 
 export const RawDifferenceItemSchema = z.object({
   clauseTitle: z.string().min(1, "Clause title is required"),
-  clauseNumber: z.string().optional(),
+  clauseNumber: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val || undefined),
   type: z
     .string()
     .optional()
@@ -57,7 +63,11 @@ export const RawDifferenceItemSchema = z.object({
   explanation: z.string().min(1, "Explanation is required"),
   evidenceA: z.array(RawDifferenceEvidenceSchema).default([]),
   evidenceB: z.array(RawDifferenceEvidenceSchema).default([]),
-  riskOrReviewNote: z.string().optional(),
+  riskOrReviewNote: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val || undefined),
 })
 
 export const ComparisonOutputSchema = z.object({

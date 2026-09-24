@@ -24,6 +24,9 @@ export interface AlignedComparisonContext {
   docBName: string
   pairs: AlignedClausePair[]
   formattedContext: string
+  alignedClauseCount: number
+  addedClauseCount: number
+  removedClauseCount: number
 }
 
 function normalizeTitle(title: string): string {
@@ -214,6 +217,8 @@ export function alignClauses(
 
 /**
  * Builds a structured, token-efficient aligned prompt context from two normalized documents.
+ * Produces an aligned structural map linking corresponding sections between [DocA:L...] and [DocB:L...]
+ * without redundantly duplicating verbatim text that is already provided in source blocks.
  */
 export function buildAlignedComparisonContext(
   docA: NormalizedDocument,
@@ -223,39 +228,27 @@ export function buildAlignedComparisonContext(
   const clausesB = parseDocumentClauses(docB)
   const pairs = alignClauses(clausesA, clausesB)
 
+  let alignedClauseCount = 0
+  let addedClauseCount = 0
+  let removedClauseCount = 0
+
   const formattedSections: string[] = []
 
   for (const pair of pairs) {
     if (pair.status === "both_present" && pair.clauseA && pair.clauseB) {
-      const linesA = pair.clauseA.lines
-        .map((l) => `[DocA:L${l.lineNumber}] ${l.text}`)
-        .join("\n")
-      const linesB = pair.clauseB.lines
-        .map((l) => `[DocB:L${l.lineNumber}] ${l.text}`)
-        .join("\n")
-
+      alignedClauseCount++
       formattedSections.push(
-        `### SECTION: ${pair.title}\n` +
-          `--- DOCUMENT A [${docA.name}] (L${pair.clauseA.startLine}-L${pair.clauseA.endLine}) ---\n${linesA}\n\n` +
-          `--- DOCUMENT B [${docB.name}] (L${pair.clauseB.startLine}-L${pair.clauseB.endLine}) ---\n${linesB}\n`
+        `- Aligned Section "${pair.title}": [DocA:L${pair.clauseA.startLine}-L${pair.clauseA.endLine}] aligns with [DocB:L${pair.clauseB.startLine}-L${pair.clauseB.endLine}]`
       )
     } else if (pair.status === "removed_in_b" && pair.clauseA) {
-      const linesA = pair.clauseA.lines
-        .map((l) => `[DocA:L${l.lineNumber}] ${l.text}`)
-        .join("\n")
-
+      removedClauseCount++
       formattedSections.push(
-        `### SECTION ONLY IN DOCUMENT A (ABSENT IN DOCUMENT B): ${pair.title}\n` +
-          `--- DOCUMENT A [${docA.name}] (L${pair.clauseA.startLine}-L${pair.clauseA.endLine}) ---\n${linesA}\n`
+        `- Removed Section (in Document A only): "${pair.title}" [DocA:L${pair.clauseA.startLine}-L${pair.clauseA.endLine}]`
       )
     } else if (pair.status === "added_in_b" && pair.clauseB) {
-      const linesB = pair.clauseB.lines
-        .map((l) => `[DocB:L${l.lineNumber}] ${l.text}`)
-        .join("\n")
-
+      addedClauseCount++
       formattedSections.push(
-        `### SECTION ONLY IN DOCUMENT B (NEW / ADDED IN B): ${pair.title}\n` +
-          `--- DOCUMENT B [${docB.name}] (L${pair.clauseB.startLine}-L${pair.clauseB.endLine}) ---\n${linesB}\n`
+        `- Added Section (in Document B only): "${pair.title}" [DocB:L${pair.clauseB.startLine}-L${pair.clauseB.endLine}]`
       )
     }
   }
@@ -264,6 +257,9 @@ export function buildAlignedComparisonContext(
     docAName: docA.name,
     docBName: docB.name,
     pairs,
-    formattedContext: formattedSections.join("\n\n"),
+    alignedClauseCount,
+    addedClauseCount,
+    removedClauseCount,
+    formattedContext: formattedSections.join("\n"),
   }
 }

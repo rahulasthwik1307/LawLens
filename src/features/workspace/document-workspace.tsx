@@ -519,7 +519,7 @@ export function DocumentWorkspace({
                 ? "Grounded Output"
                 : analysisStatus === "loading"
                 ? "Analyzing..."
-                : "Phase 3 Ready"}
+                : "Workspace Ready"}
             </Badge>
           </div>
 

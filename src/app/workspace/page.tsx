@@ -76,7 +76,7 @@ export default function WorkspacePage() {
                 Jurisdiction: India (Active)
               </Badge>
               <Badge variant="outline" size="sm" className="hidden sm:inline-flex font-mono">
-                Phase 2 Intake Foundation
+                Intake Workspace
               </Badge>
             </div>
           </div>

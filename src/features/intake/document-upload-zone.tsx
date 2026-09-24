@@ -238,7 +238,7 @@ export function DocumentUploadZone({
         <ShieldCheck className="size-4 text-primary shrink-0" />
         <p className="leading-normal">
           <strong>Security Principle:</strong> Document text is handled as untrusted data.
-          No file contents are executed, and no external AI calls are dispatched in Phase 2.
+          No file contents are executed, and documents remain securely isolated within the untrusted data boundary.
         </p>
       </div>
     </div>

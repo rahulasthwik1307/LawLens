@@ -194,20 +194,20 @@ export interface DocumentComparisonRequest {
 export interface RawDifferenceEvidence {
   document: "A" | "B"
   quote: string
-  startLine?: number
-  endLine?: number
+  startLine?: number | null
+  endLine?: number | null
 }
 
 export interface RawDifferenceItem {
   clauseTitle: string
-  clauseNumber?: string
+  clauseNumber?: string | null
   type: ComparisonDifferenceType
   reviewStatus: ComparisonReviewStatus
   summary: string
   explanation: string
   evidenceA?: RawDifferenceEvidence[]
   evidenceB?: RawDifferenceEvidence[]
-  riskOrReviewNote?: string
+  riskOrReviewNote?: string | null
 }
 
 export interface RawComparisonOutput {
@@ -403,6 +403,10 @@ export type AIErrorCode =
   | "UNREADABLE_DOCUMENT"
   | "INVALID_COMPARISON"
   | "FEATURE_UNSUPPORTED"
+  | "REQUEST_TOO_LARGE"
+  | "NETWORK_ERROR"
+  | "SCHEMA_VALIDATION_ERROR"
+  | "EVIDENCE_VERIFICATION_FAILED"
 
 export class AIProviderError extends Error {
   readonly code: AIErrorCode

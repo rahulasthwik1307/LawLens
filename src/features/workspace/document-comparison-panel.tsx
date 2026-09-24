@@ -166,7 +166,7 @@ export function DocumentComparisonPanel({
             </div>
           </div>
           <Badge variant="outline" size="sm" className="font-mono text-[10px]">
-            Phase 5
+            Comparative Review
           </Badge>
         </div>
 

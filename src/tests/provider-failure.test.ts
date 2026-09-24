@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { GeminiLegalAnalysisProvider } from "../services/ai/providers/gemini-provider.ts"
+import { GroqLegalAnalysisProvider } from "../services/ai/providers/groq-provider.ts"
 import { LawLensAIService } from "../services/ai/ai-service.ts"
 import { AIProviderError } from "../services/ai/types.ts"
 import type {
@@ -29,7 +29,7 @@ Governing law is India.`,
 
 test("Provider Failure — Missing API key throws safe 503 error", async () => {
   // Empty key
-  const provider = new GeminiLegalAnalysisProvider("")
+  const provider = new GroqLegalAnalysisProvider("")
   await assert.rejects(
     async () => {
       await provider.analyzeDocument({
@@ -49,7 +49,7 @@ test("Provider Failure — Missing API key throws safe 503 error", async () => {
       assert.strictEqual(err.code, "MISSING_API_KEY")
       assert.strictEqual(err.statusCode, 503)
       assert.strictEqual(err.retryable, false)
-      assert.ok(err.userMessage.includes("Gemini API key is not configured"))
+      assert.ok(err.userMessage.includes("Groq API key is not configured"))
       return true
     }
   )

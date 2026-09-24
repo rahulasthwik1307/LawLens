@@ -469,14 +469,14 @@ export function verifyComparisonDifference(
   return {
     id: `diff_${index + 1}`,
     clauseTitle: rawDiff.clauseTitle,
-    clauseNumber: rawDiff.clauseNumber,
+    clauseNumber: rawDiff.clauseNumber || undefined,
     type: rawDiff.type,
     reviewStatus: rawDiff.reviewStatus,
     summary: rawDiff.summary,
     explanation: rawDiff.explanation,
     evidenceA,
     evidenceB,
-    riskOrReviewNote: rawDiff.riskOrReviewNote,
+    riskOrReviewNote: rawDiff.riskOrReviewNote || undefined,
   }
 }
 

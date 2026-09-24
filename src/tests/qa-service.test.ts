@@ -4,7 +4,7 @@ import { validateQASchema } from "../services/ai/qa-schema.ts"
 import { retrieveTargetedContext } from "../services/ai/context-retriever.ts"
 import { verifyQAEvidence } from "../services/ai/evidence-validator.ts"
 import { LawLensAIService } from "../services/ai/ai-service.ts"
-import { GeminiLegalAnalysisProvider } from "../services/ai/providers/gemini-provider.ts"
+import { GroqLegalAnalysisProvider } from "../services/ai/providers/groq-provider.ts"
 import { AIProviderError } from "../services/ai/types.ts"
 import type {
   LegalAnalysisProvider,
@@ -244,8 +244,8 @@ test("AIService Q&A — Insufficient evidence calibrates confidence to unclear_f
   assert.strictEqual(result.stats.totalEvidenceCount, 0)
 })
 
-test("AIService Q&A — Missing API key in Gemini provider throws safe 503 error", async () => {
-  const emptyKeyProvider = new GeminiLegalAnalysisProvider("", "gemini-3.5-flash-lite")
+test("AIService Q&A — Missing API key in Groq provider throws safe 503 error", async () => {
+  const emptyKeyProvider = new GroqLegalAnalysisProvider("")
   const service = new LawLensAIService(emptyKeyProvider)
 
   await assert.rejects(
