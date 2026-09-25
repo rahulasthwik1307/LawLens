@@ -329,65 +329,8 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
   }
 
   /**
-   * Dispatches a single completion request to the Groq OpenAI-compatible API.
-   * reasoning_effort is intentionally OMITTED — it conflicts with strict JSON schema
-   * structured outputs on GPT-OSS models, causing HTTP 400.
-   */
-  private async callGroqApi(
-    model: string,
-    systemInstruction: string,
-    userPrompt: string,
-    jsonSchema: GroqJsonSchemaContract,
-    maxCompletionTokens?: number
-  ): Promise<string> {
-    const requestBody = buildGroqRequestBody({
-      model,
-      systemInstruction,
-      userPrompt,
-      jsonSchema,
-      // reasoning_effort intentionally omitted — incompatible with strict json_schema
-      temperature: 0.1,
-      maxCompletionTokens,
-    })
-
-    let response: Response
-    try {
-      response = await fetch(GROQ_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify(requestBody),
-        signal: AbortSignal.timeout(this.timeoutMs),
-      })
-    } catch (networkError: unknown) {
-      const isTimeout =
-        (networkError instanceof Error &&
-          (networkError.name === "TimeoutError" || networkError.name === "AbortError")) ||
-        (networkError instanceof DOMException && networkError.name === "TimeoutError")
-
-      throw new AIProviderError(
-        isTimeout ? "TIMEOUT" : "PROVIDER_UNAVAILABLE",
-        isTimeout
-          ? `Groq request timed out after ${this.timeoutMs}ms with model ${model}`
-          : `Network error communicating with Groq API: ${
-              networkError instanceof Error ? networkError.message : String(networkError)
-            }`,
-        isTimeout
-          ? "The analysis timed out. Your document is safe; please try again."
-          : "Could not reach AI service. Please check your connection and try again.",
-        isTimeout ? 504 : 502,
-        true
-      )
-    }
-
-    return (await this.parseGroqHttpResponse(response, model)).contentText
-  }
-
-  /**
    * Parses and validates the HTTP response envelope from Groq.
-   * Shared between callGroqApi and callGroqApiWithTimeout.
+   * Used by callGroqApiWithTimeout.
    */
   private async parseGroqHttpResponse(
     response: Response,
