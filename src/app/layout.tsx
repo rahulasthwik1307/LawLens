@@ -19,9 +19,14 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "LawLens — See what matters",
+  title: "LawLens — See What Matters",
   description:
     "GenAI-powered legal information and document navigation platform. Understand complex legal documents, verify findings against source evidence, and prepare for professional assistance.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
