@@ -1227,11 +1227,11 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
     // Do NOT include timestamps, request IDs, or random values here — they break prompt caching.
     const userPrompt = `Jurisdiction: ${jurisdiction}
 
-Analyze the document below. Extract: parties, dates, monetary items, rights, obligations, restrictions, termination clauses, dispute resolution provisions, and review points. For every finding: include a verbatim evidenceQuote, startLine, and endLine from the [L{N}] markers.
-
 <document_source_content filename="${request.document.name}">
 ${annotatedStream}
-</document_source_content>`
+</document_source_content>
+
+Extract structured legal findings according to the schema.`
 
     return this.executeWithPolicy<RawAnalysisOutput>(
       "findings",
@@ -1354,31 +1354,28 @@ Provide an executive summary, unchanged provisions summary, and structured diffe
     const jurisdiction = request.jurisdiction || "India"
 
     const candidatesXml = request.candidates
-      .map(
-        (c) => `
-<candidate id="${c.candidateId}" type="${c.type}" priority="${c.priority}" designation="${c.documentDesignation || "single"}">
-  <title>${c.title}</title>
-  <clause>${c.clauseTitle || ""}</clause>
-  <factual_summary>${c.factualSummary}</factual_summary>
-  <why_it_matters>${c.whyItMatters || ""}</why_it_matters>
-  <suggested_step>${c.suggestedStep || ""}</suggested_step>
+      .map((c) => {
+        const refAttr = c.relatedFindingId
+          ? ` findingId="${c.relatedFindingId}"`
+          : c.relatedDifferenceId
+          ? ` diffId="${c.relatedDifferenceId}"`
+          : ""
+        const docAttr = c.documentDesignation ? ` doc="${c.documentDesignation}"` : ""
+        return `<candidate id="${c.candidateId}" type="${c.type}" priority="${c.priority}"${docAttr}${refAttr}>
+  <clause>${c.clauseTitle || c.title}</clause>
+  <summary>${c.factualSummary}</summary>
   <quote lines="${c.startLine}-${c.endLine}">${c.quote}</quote>
-  ${c.relatedFindingId ? `<relatedFindingId>${c.relatedFindingId}</relatedFindingId>` : ""}
-  ${c.relatedDifferenceId ? `<relatedDifferenceId>${c.relatedDifferenceId}</relatedDifferenceId>` : ""}
 </candidate>`
-      )
+      })
       .join("\n")
 
     const userPrompt = `Jurisdiction: ${jurisdiction}
-${request.contextSummary ? `Context Summary: ${request.contextSummary}\n` : ""}
-
+${request.contextSummary ? `Context: ${request.contextSummary}\n` : ""}
 <action_candidates count="${request.candidates.length}">
 ${candidatesXml}
 </action_candidates>
 
-Transform each verified candidate above into a structured, evidence-grounded action item following the Clause-to-Action map:
-Clause → Meaning → Why it matters → What to check/do → Source.
-Adhere strictly to neutral wording without offering definitive legal advice.`
+Transform each candidate into a structured, evidence-grounded action item matching the schema.`
 
     const docHash = request.candidates[0]?.sourceDocumentId || "doc_actions"
     const candidatesHash = djb2Hash(

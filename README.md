@@ -197,7 +197,7 @@ Open [http://localhost:3000](http://localhost:3000) to access LawLens.
 LawLens is thoroughly validated across automated testing, static type checking, code quality linting, and production compilation:
 
 ```bash
-# Run unit, integration, resilience, and security test suite (156+ passing tests)
+# Run unit, integration, resilience, comparison, and security test suite (175 passing tests, 0 failures)
 npm test
 
 # Run ESLint (0 errors, 0 warnings)
