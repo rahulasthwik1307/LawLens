@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { validateAnalysisSchema, AnalysisOutputSchema } from "../services/ai/analysis-schema.ts"
+import { validateAnalysisSchema } from "../services/ai/analysis-schema.ts"
 
 test("Schema Validation — Valid AI output passes successfully", () => {
   const validOutput = {

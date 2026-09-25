@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { FileText, Sparkles, CheckCircle2, ArrowRight, ShieldCheck, Scale } from "lucide-react"
+import { FileText, Sparkles, CheckCircle2, ArrowRight } from "lucide-react"
 
 interface ClauseSpecimen {
   id: string

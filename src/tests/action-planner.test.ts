@@ -5,7 +5,6 @@ import {
   convertPlanToActionItem,
   getActionableFindings,
   isFindingActionable,
-  type LegalActionPlan,
 } from "../services/ai/legal-action-planner.ts"
 import { composePreparationPack } from "../services/ai/pack-composer.ts"
 import { SAMPLE_DOCUMENTS } from "../lib/sample-documents.ts"

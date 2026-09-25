@@ -71,7 +71,8 @@ const SMALL_MODEL = process.env.GROQ_SMALL_MODEL ?? "openai/gpt-oss-20b"
 const TASK_POLICIES: Record<AITask, TaskPolicy> = {
   qa: {
     primaryModel: SMALL_MODEL,
-    fallbackModel: FALLBACK_MODEL,
+    // Differentiated fallback: If 20B is rate-limited or fails, fall back to 120B!
+    fallbackModel: PRIMARY_MODEL,
     maxCompletionTokens: 800, // QA answer + evidence, bounded
     timeoutMs: 22000,
     maxRetries: 1,
@@ -81,19 +82,20 @@ const TASK_POLICIES: Record<AITask, TaskPolicy> = {
   },
   actions: {
     primaryModel: SMALL_MODEL,
-    fallbackModel: FALLBACK_MODEL,
+    fallbackModel: PRIMARY_MODEL,
     maxCompletionTokens: 2000, // Action list, bounded
     timeoutMs: 22000,
     maxRetries: 1,
     retryBaseDelayMs: 1000,
-    maxInputContextTokens: 4000, // Candidate XML + small doc context
+    maxInputContextTokens: 6000, // Candidate XML + necessary context
     cachingEnabled: true,
   },
   findings: {
     primaryModel: PRIMARY_MODEL,
     fallbackModel: FALLBACK_MODEL,
-    maxCompletionTokens: 5000, // All finding categories
-    timeoutMs: 32000,
+    // Baseline budget for complex documents. Small/medium documents use adaptive budgeting.
+    maxCompletionTokens: 8000,
+    timeoutMs: 35000,
     maxRetries: 1,
     retryBaseDelayMs: 1500,
     maxInputContextTokens: 12000, // Full or bounded document
@@ -102,13 +104,82 @@ const TASK_POLICIES: Record<AITask, TaskPolicy> = {
   compare: {
     primaryModel: PRIMARY_MODEL,
     fallbackModel: FALLBACK_MODEL,
-    maxCompletionTokens: 2500, // Comparison differences, bounded
-    timeoutMs: 38000,
+    maxCompletionTokens: 4000,
+    timeoutMs: 40000,
     maxRetries: 1,
     retryBaseDelayMs: 2000,
     maxInputContextTokens: 14000, // Two documents, clause-aligned
     cachingEnabled: true,
   },
+}
+
+/**
+ * Document complexity metrics used for safe adaptive output budgeting.
+ */
+export interface DocumentComplexityMetrics {
+  lineCount?: number
+  wordCount?: number
+  estimatedInputTokens?: number
+}
+
+/**
+ * Calculates a predictable, safe adaptive output token budget.
+ *
+ * Prevents over-requesting tokens against Groq's Tokens Per Minute (TPM) quota
+ * on small/medium documents, while guaranteeing sufficient tokens + safety margin
+ * for larger documents.
+ *
+ * Measured output distributions:
+ * - Small (<40 lines, <500 words): ~1,400–3,200 output tokens. Budget: 4,500
+ * - Medium (40–150 lines, 500–2,000 words): ~3,500–4,800 output tokens. Budget: 6,500
+ * - Large (>150 lines, >2,000 words): up to ~6,000+ output tokens. Budget: 8,000
+ */
+export function calculateAdaptiveOutputBudget(
+  task: AITask,
+  metrics?: DocumentComplexityMetrics
+): number {
+  const policy = getTaskPolicy(task)
+
+  if (task !== "findings") {
+    return policy.maxCompletionTokens
+  }
+
+  if (!metrics) {
+    return policy.maxCompletionTokens // Default 8000
+  }
+
+  const lines = metrics.lineCount ?? 0
+  const words = metrics.wordCount ?? 0
+  const inputTokens = metrics.estimatedInputTokens ?? 0
+
+  // If no metrics available, default to safe 8000 baseline
+  if (!lines && !words && !inputTokens) {
+    return policy.maxCompletionTokens
+  }
+
+  // Complex / large legal document (>150 lines, >2000 words, or >4500 input tokens)
+  if (lines > 150 || words > 2000 || inputTokens > 4500) {
+    return 8000
+  }
+
+  // Medium complexity (40–150 lines, 500–2000 words, or 1500–4500 input tokens)
+  if (lines >= 40 || words >= 500 || inputTokens >= 1500) {
+    return 6500
+  }
+
+  // Low complexity: short/template agreements (<40 lines and <500 words)
+  return 4500
+}
+
+/**
+ * Safely escalates the completion budget by +2,500 tokens (up to max ceiling of 10,000)
+ * when a TOKEN_LIMIT_EXCEEDED 400 is detected on Groq.
+ */
+export function escalateCompletionBudget(currentBudget: number, task: AITask): number {
+  if (task === "qa") return Math.min(1500, currentBudget + 500)
+  if (task === "actions") return Math.min(3500, currentBudget + 1000)
+  if (task === "compare") return Math.min(6000, currentBudget + 2000)
+  return Math.min(10000, currentBudget + 2500)
 }
 
 /**
@@ -130,10 +201,19 @@ export function getTaskPolicy(task: AITask): TaskPolicy {
 const RECOVERABLE_STATUS_CODES = new Set([429, 502, 503, 504])
 
 /**
- * HTTP status codes that indicate a permanent, non-recoverable failure.
+ * HTTP status codes that indicate a PERMANENT, non-recoverable failure.
  * These must NOT be retried (retrying will produce identical failures).
+ *
+ * NOTE on 400: Groq returns 400 for two distinct reasons:
+ *  1. Invalid request parameters (e.g., malformed schema) → non-recoverable
+ *  2. Output token truncation (max_completion_tokens too small) → recoverable!
+ *
+ * Sub-case 2 is identified by the error message containing "max completion tokens".
+ * The classifyStatusCode function handles this at the HTTP level; the provider
+ * layer (parseGroqHttpResponse) uses classifyGroq400Detail to distinguish sub-cases
+ * and sets the AIProviderError.retryable flag accordingly.
  */
-const NON_RECOVERABLE_STATUS_CODES = new Set([400, 401, 403, 413, 422])
+const NON_RECOVERABLE_STATUS_CODES = new Set([401, 403, 413, 422])
 
 export type ErrorRecoverability =
   | "recoverable" // Retry + fallback eligible
@@ -143,9 +223,13 @@ export type ErrorRecoverability =
 /**
  * Classifies an HTTP status code into a recoverability category.
  * Used by the retry/fallback engine.
+ *
+ * 400 is treated as "non_recoverable" by default — the provider layer
+ * overrides this for TOKEN_LIMIT_EXCEEDED sub-cases by setting retryable=true.
  */
 export function classifyStatusCode(statusCode: number): ErrorRecoverability {
   if (NON_RECOVERABLE_STATUS_CODES.has(statusCode)) return "non_recoverable"
+  if (statusCode === 400) return "non_recoverable" // Provider may override via AIProviderError.retryable
   if (statusCode === 504) return "timeout"
   if (RECOVERABLE_STATUS_CODES.has(statusCode)) return "recoverable"
   if (statusCode >= 500) return "recoverable"
@@ -174,4 +258,4 @@ export function calcRetryDelayMs(
  *
  * Format: "YYYYMMDD-vN" where N is the version for that day.
  */
-export const PIPELINE_VERSION = "20260924-v1"
+export const PIPELINE_VERSION = "20260925-v3"

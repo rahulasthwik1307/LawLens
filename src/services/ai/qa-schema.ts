@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { FindingConfidence, RawQAOutput } from "./types.ts"
+import type { FindingConfidence } from "./types.ts"
 
 export const RawQAEvidenceSchema = z.object({
   quote: z

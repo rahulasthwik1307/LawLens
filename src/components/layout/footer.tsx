@@ -59,13 +59,13 @@ export function Footer() {
                 <strong>Information, Not Legal Advice:</strong> LawLens does not create an attorney-client relationship or replace professional legal counsel.
               </p>
               <div className="pt-1 flex items-center gap-4 text-[11px]">
-                <a
+                <Link
                   href="/#standards"
                   className="text-primary hover:underline font-medium inline-flex items-center gap-1"
                 >
                   <span>Safety Standards</span>
                   <ArrowUpRight className="size-3" />
-                </a>
+                </Link>
                 <Link
                   href="/workspace"
                   className="text-ink-primary hover:underline font-medium inline-flex items-center gap-1"

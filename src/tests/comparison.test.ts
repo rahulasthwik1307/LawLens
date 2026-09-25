@@ -8,14 +8,14 @@ import {
 } from "../services/ai/clause-aligner.ts"
 import {
   validateComparisonSchema,
-  ComparisonOutputSchema,
 } from "../services/ai/comparison-schema.ts"
 import { verifyComparisonDifference } from "../services/ai/evidence-validator.ts"
 import { LawLensAIService } from "../services/ai/ai-service.ts"
 import { SAMPLE_DOCUMENTS } from "../lib/sample-documents.ts"
-import type {
-  LegalAnalysisProvider,
-  RawComparisonOutput,
+import {
+  AIProviderError,
+  type LegalAnalysisProvider,
+  type RawComparisonOutput,
 } from "../services/ai/types.ts"
 import type { UploadedDocument } from "../types/document.ts"
 
@@ -205,7 +205,8 @@ test("AIService compareDocuments — Rejects comparing a document against itself
     async () => {
       await service.compareDocuments(sampleDocA, sampleDocA)
     },
-    (err: any) => {
+    (err: unknown) => {
+      assert(err instanceof AIProviderError)
       assert.equal(err.code, "INVALID_COMPARISON")
       return true
     }
@@ -233,7 +234,8 @@ test("AIService compareDocuments — Rejects unreadable documents", async () => 
     async () => {
       await service.compareDocuments(sampleDocA, unreadableDoc)
     },
-    (err: any) => {
+    (err: unknown) => {
+      assert(err instanceof AIProviderError)
       assert.equal(err.code, "UNREADABLE_DOCUMENT")
       return true
     }

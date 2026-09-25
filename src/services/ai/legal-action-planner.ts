@@ -96,7 +96,7 @@ export function buildLegalActionPlan(params: {
   existingActions?: ActionItem[]
   jurisdiction?: string
 }): LegalActionPlan {
-  const { finding, document, allFindings = [], existingActions = [], jurisdiction = "India" } = params
+  const { finding, document, allFindings = [], existingActions = [] } = params
 
   const findingTitleLower = finding.title.toLowerCase()
   const explanationLower = finding.explanation.toLowerCase()

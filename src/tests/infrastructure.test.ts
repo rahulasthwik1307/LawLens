@@ -27,9 +27,7 @@ import {
 import { runTokenPreflight, estimateTokens, checkContextFits } from "../services/ai/token-guard.ts"
 import {
   buildCacheKey,
-  normalizeQuestion,
   resultCache,
-  inFlightRegistry,
   withDeduplicationAndCache,
 } from "../services/ai/result-cache.ts"
 import {
@@ -164,6 +162,7 @@ test("Document Index — findRelevantSections respects token budget", () => {
   for (const section of relevant) {
     totalApproxTokens += section.approxTokens
   }
+  assert.ok(totalApproxTokens > 0, "Sections should have non-zero token count")
   // Budget may be slightly exceeded due to section granularity, but should be close
   assert.ok(relevant.length < index.sections.length, "Token budget should limit results")
 })
@@ -448,6 +447,7 @@ test("Deduplication — failed execution is not cached", async () => {
     /Simulated AI failure/
   )
 
+  assert.strictEqual(callCount, 1, "Executor should have been called once")
   assert.strictEqual(resultCache.get(key), null, "Failed result must not be cached")
 })
 

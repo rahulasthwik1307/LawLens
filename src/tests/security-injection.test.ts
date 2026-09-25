@@ -4,6 +4,7 @@ import {
   normalizeDocument,
   formatAnnotatedDocumentStream,
 } from "../services/ai/document-normalizer.ts"
+import { AIProviderError } from "../services/ai/types.ts"
 import type { UploadedDocument } from "../types/document.ts"
 
 test("Security & Injection Defense — Document with prompt injection is strictly treated as data", () => {
@@ -62,7 +63,8 @@ test("Security & Injection Defense — Empty or unreadable document throws UNREA
     () => {
       normalizeDocument(emptyDoc)
     },
-    (err: any) => {
+    (err: unknown) => {
+      if (!(err instanceof AIProviderError)) return false
       return (
         err.code === "UNREADABLE_DOCUMENT" &&
         err.statusCode === 400 &&

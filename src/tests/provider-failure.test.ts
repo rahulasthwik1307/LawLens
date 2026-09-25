@@ -5,7 +5,6 @@ import { LawLensAIService } from "../services/ai/ai-service.ts"
 import { AIProviderError } from "../services/ai/types.ts"
 import type {
   LegalAnalysisProvider,
-  LegalAnalysisRequest,
   RawAnalysisOutput,
 } from "../services/ai/types.ts"
 import type { UploadedDocument } from "../types/document.ts"
@@ -45,7 +44,8 @@ test("Provider Failure — Missing API key throws safe 503 error", async () => {
         },
       })
     },
-    (err: any) => {
+    (err: unknown) => {
+      assert(err instanceof AIProviderError)
       assert.strictEqual(err.code, "MISSING_API_KEY")
       assert.strictEqual(err.statusCode, 503)
       assert.strictEqual(err.retryable, false)
@@ -61,9 +61,7 @@ test("Provider Abstraction — Custom provider plugs into LawLensAIService seaml
     readonly id = "mock_provider"
     readonly name = "Mock Legal Engine"
 
-    async analyzeDocument(
-      request: LegalAnalysisRequest
-    ): Promise<RawAnalysisOutput> {
+    async analyzeDocument(): Promise<RawAnalysisOutput> {
       return {
         documentType: "Commercial Lease",
         summary: "Mock analysis summary for testing.",
@@ -124,11 +122,11 @@ test("Provider Abstraction — Malformed provider output is rejected safely", as
     readonly id = "malformed_provider"
     readonly name = "Malformed Provider"
 
-    async analyzeDocument(): Promise<any> {
+    async analyzeDocument(): Promise<RawAnalysisOutput> {
       return {
         // Missing required summary and documentType
         parties: "invalid string instead of array",
-      }
+      } as unknown as RawAnalysisOutput
     }
   }
 
@@ -137,7 +135,8 @@ test("Provider Abstraction — Malformed provider output is rejected safely", as
     async () => {
       await failingService.analyzeDocument(sampleDoc)
     },
-    (err: any) => {
+    (err: unknown) => {
+      assert(err instanceof AIProviderError)
       assert.strictEqual(err.code, "MALFORMED_OUTPUT")
       assert.strictEqual(err.statusCode, 422)
       assert.ok(err.userMessage.includes("reliably structure"))

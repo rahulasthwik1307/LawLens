@@ -1,23 +1,14 @@
 import Link from "next/link"
 import {
-  FileText,
-  Search,
   ShieldCheck,
   CheckCircle2,
   ArrowRight,
   Scale,
-  Compass,
-  FileSearch,
-  BookOpen,
-  Calendar,
   Lock,
-  Layers,
   HelpCircle,
   Landmark,
   ExternalLink,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { DocumentLensSpecimen } from "@/components/specimen/document-lens-specimen"

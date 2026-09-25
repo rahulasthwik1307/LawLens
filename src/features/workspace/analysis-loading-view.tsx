@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, CheckCircle2, ShieldCheck, Scale, FileText } from "lucide-react"
+import { Loader2, CheckCircle2, ShieldCheck, Scale } from "lucide-react"
 
 interface AnalysisLoadingViewProps {
   documentName: string
@@ -42,7 +42,15 @@ const ANALYSIS_STAGES: Stage[] = [
 ]
 
 export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) {
-  const [currentStageIndex, setCurrentStageIndex] = React.useState(0)
+  const [currentStageIndex, setCurrentStageIndex] = React.useState(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return ANALYSIS_STAGES.length - 1
+    }
+    return 0
+  })
 
   React.useEffect(() => {
     // Check if user prefers reduced motion
@@ -51,7 +59,6 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
     if (prefersReducedMotion) {
-      setCurrentStageIndex(ANALYSIS_STAGES.length - 1)
       return
     }
 
@@ -81,10 +88,10 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
             <Loader2 className="size-5 animate-spin motion-reduce:animate-none" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-serif text-lg font-bold text-ink-primary break-words">
+            <h3 className="font-serif text-lg font-bold text-ink-primary wrap-break-word">
               Analyzing Document
             </h3>
-            <p className="text-xs text-ink-secondary break-words">
+            <p className="text-xs text-ink-secondary wrap-break-word">
               Extracting evidence-grounded provisions from &ldquo;{documentName}&rdquo;
             </p>
           </div>
@@ -120,7 +127,7 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
               </div>
               <div className="space-y-0.5 min-w-0 flex-1">
                 <p
-                  className={`text-xs font-semibold break-words ${
+                  className={`text-xs font-semibold wrap-break-word ${
                     isCurrent
                       ? "text-primary"
                       : isFinished
@@ -130,7 +137,7 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
                 >
                   {stage.title}
                 </p>
-                <p className="text-[11px] text-ink-muted leading-relaxed break-words">
+                <p className="text-[11px] text-ink-muted leading-relaxed wrap-break-word">
                   {stage.detail}
                 </p>
               </div>
@@ -142,7 +149,7 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
       {/* Reassurance Notice */}
       <div className="pt-2 border-t border-border/50 text-[11px] text-ink-muted flex items-center gap-2 min-w-0">
         <ShieldCheck className="size-3.5 text-emerald-600 shrink-0" />
-        <span className="break-words">Original document remains read-only and isolated.</span>
+        <span className="wrap-break-word">Original document remains read-only and isolated.</span>
       </div>
     </div>
   )

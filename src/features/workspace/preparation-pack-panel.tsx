@@ -5,22 +5,11 @@ import {
   Printer,
   Copy,
   Check,
-  RotateCcw,
   Sparkles,
   Info,
   ExternalLink,
-  ShieldCheck,
-  FileText,
-  AlertCircle,
-  HelpCircle,
-  Clock,
-  Calendar,
-  Layers,
   ChevronDown,
   ChevronUp,
-  BookmarkCheck,
-  Scale,
-  GitCompare,
   ArrowRight,
   BookOpen,
 } from "lucide-react"
@@ -64,7 +53,14 @@ export function PreparationPackPanel({
   onActiveViewerDocChange,
   onNavigateToMode,
 }: PreparationPackPanelProps) {
-  const [pack, setPack] = React.useState<ProfessionalPreparationPack | null>(() => {
+  const [serverPack, setServerPack] = React.useState<ProfessionalPreparationPack | null>(null)
+  const [loading, setLoading] = React.useState(false)
+  const [copied, setCopied] = React.useState(false)
+  const [activeSection, setActiveSection] = React.useState<"all" | "review" | "questions" | "terms" | "changes" | "evidence">("all")
+  const [expandedAppendix, setExpandedAppendix] = React.useState(false)
+
+  // Derived pack computation without cascading effect renders
+  const derivedPack = React.useMemo(() => {
     try {
       return composePreparationPack({
         document: currentDocument,
@@ -77,30 +73,9 @@ export function PreparationPackPanel({
     } catch {
       return null
     }
-  })
-  const [loading, setLoading] = React.useState(false)
-  const [copied, setCopied] = React.useState(false)
-  const [activeSection, setActiveSection] = React.useState<"all" | "review" | "questions" | "terms" | "changes" | "evidence">("all")
-  const [expandedAppendix, setExpandedAppendix] = React.useState(false)
-
-  // Re-compose pack whenever inputs change
-  React.useEffect(() => {
-    try {
-      const composed = composePreparationPack({
-        document: currentDocument,
-        analysisResult,
-        actions,
-        comparisonResult,
-        comparisonDocB,
-        qaHistory,
-      })
-      if (composed) {
-        setPack((prev) => (JSON.stringify(prev?.stats) !== JSON.stringify(composed.stats) ? composed : prev))
-      }
-    } catch {
-      // Fallback
-    }
   }, [currentDocument, analysisResult, actions, comparisonResult, comparisonDocB, qaHistory])
+
+  const pack = serverPack || derivedPack
 
   const handlePrint = () => {
     window.print()
@@ -189,28 +164,12 @@ export function PreparationPackPanel({
       })
       const data = await res.json()
       if (data.success && data.pack) {
-        setPack(data.pack)
+        setServerPack(data.pack)
       } else {
-        const composed = composePreparationPack({
-          document: currentDocument,
-          analysisResult,
-          actions,
-          comparisonResult,
-          comparisonDocB,
-          qaHistory,
-        })
-        setPack(composed)
+        setServerPack(null)
       }
     } catch {
-      const composed = composePreparationPack({
-        document: currentDocument,
-        analysisResult,
-        actions,
-        comparisonResult,
-        comparisonDocB,
-        qaHistory,
-      })
-      setPack(composed)
+      setServerPack(null)
     } finally {
       setLoading(false)
     }
@@ -260,7 +219,7 @@ export function PreparationPackPanel({
             <h2 className="font-serif text-lg md:text-xl font-bold text-ink-primary tracking-tight print:text-2xl">
               Professional Consultation Briefing
             </h2>
-            <p className="text-xs text-ink-secondary leading-relaxed break-words">
+            <p className="text-xs text-ink-secondary leading-relaxed wrap-break-word">
               Consolidated from verified legal findings, contractual obligations, and action items in{" "}
               <strong className="text-ink-primary font-medium">{pack.overview.documentName}</strong>.
             </p>

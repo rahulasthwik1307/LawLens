@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { BookOpen, FileSearch, Calendar, Compass, ArrowRight } from "lucide-react"
+import { BookOpen, FileSearch, Calendar, Compass } from "lucide-react"
 
 interface CycleStage {
   id: string

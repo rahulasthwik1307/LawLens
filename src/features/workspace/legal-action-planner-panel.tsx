@@ -31,7 +31,6 @@ import type {
   ActionItem,
   DocumentAnalysisResult,
   FindingCategory,
-  LegalFinding,
 } from "@/services/ai/types"
 import {
   buildLegalActionPlan,
@@ -91,15 +90,17 @@ export function LegalActionPlannerPanel({
     return actionableFindings[0]?.id || ""
   })
 
-  // Synchronize if prop changes externally
-  React.useEffect(() => {
+  // Synchronize if prop changes externally during render
+  const [prevSelectedFindingId, setPrevSelectedFindingId] = React.useState(initialSelectedFindingId)
+  if (initialSelectedFindingId !== prevSelectedFindingId) {
+    setPrevSelectedFindingId(initialSelectedFindingId)
     if (initialSelectedFindingId) {
       const match = actionableFindings.find((f) => f.id === initialSelectedFindingId)
       if (match) {
         setActiveFindingId(match.id)
       }
     }
-  }, [initialSelectedFindingId, actionableFindings])
+  }
 
   const activeFinding = React.useMemo(() => {
     return actionableFindings.find((f) => f.id === activeFindingId) || actionableFindings[0]
@@ -301,7 +302,7 @@ export function LegalActionPlannerPanel({
             </div>
           </div>
 
-          <h3 className="font-serif text-base md:text-lg font-bold text-ink-primary leading-snug break-words">
+          <h3 className="font-serif text-base md:text-lg font-bold text-ink-primary leading-snug wrap-break-word">
             {plan.findingTitle}
           </h3>
         </div>
@@ -311,7 +312,7 @@ export function LegalActionPlannerPanel({
           <span className="font-mono text-[10px] uppercase tracking-wider text-ink-muted font-bold block">
             What the Document Says
           </span>
-          <blockquote className="font-serif text-xs md:text-sm text-ink-primary italic border-l-2 border-primary/60 pl-3 py-0.5 leading-relaxed bg-paper-contrast/30 rounded-r break-words">
+          <blockquote className="font-serif text-xs md:text-sm text-ink-primary italic border-l-2 border-primary/60 pl-3 py-0.5 leading-relaxed bg-paper-contrast/30 rounded-r wrap-break-word">
             &ldquo;{plan.whatItSays}&rdquo;
           </blockquote>
         </div>
@@ -326,7 +327,7 @@ export function LegalActionPlannerPanel({
                 What It Means
               </h4>
             </div>
-            <p className="text-xs text-ink-secondary leading-relaxed pt-0.5 break-words">
+            <p className="text-xs text-ink-secondary leading-relaxed pt-0.5 wrap-break-word">
               {plan.whatItMeans}
             </p>
           </div>
@@ -339,7 +340,7 @@ export function LegalActionPlannerPanel({
                 Why It Matters
               </h4>
             </div>
-            <p className="text-xs text-ink-secondary leading-relaxed pt-0.5 break-words">
+            <p className="text-xs text-ink-secondary leading-relaxed pt-0.5 wrap-break-word">
               {plan.whyItMatters}
             </p>
           </div>
@@ -376,7 +377,7 @@ export function LegalActionPlannerPanel({
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-ink-secondary break-words">{item.details}</p>
+                  <p className="text-[11px] text-ink-secondary wrap-break-word">{item.details}</p>
                 </div>
 
                 {item.startLine && (
@@ -561,7 +562,7 @@ export function LegalActionPlannerPanel({
         <div className="rounded-lg border border-border/60 bg-paper-contrast/40 p-3 text-xs flex flex-col @[480px]/ai:flex-row @[480px]/ai:items-center justify-between gap-2.5 text-ink-muted min-w-0">
           <div className="flex items-start gap-2 min-w-0 flex-1">
             <Info className="size-3.5 text-primary shrink-0 mt-0.5" />
-            <p className="text-[11px] leading-relaxed break-words">
+            <p className="text-[11px] leading-relaxed wrap-break-word">
               {plan.disclaimer}
             </p>
           </div>

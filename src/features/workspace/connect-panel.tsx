@@ -3,21 +3,11 @@
 import * as React from "react"
 import {
   ExternalLink,
-  ShieldCheck,
   Briefcase,
-  HelpCircle,
-  FileCheck2,
   AlertCircle,
   Check,
   Copy,
-  Info,
-  Scale,
   ArrowRight,
-  BookOpen,
-  Building2,
-  Calendar,
-  Layers,
-  Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -29,7 +19,6 @@ import type {
 } from "@/services/ai/types"
 import {
   resolveResourcesForJurisdiction,
-  type LegalResource,
 } from "@/services/resources/resource-registry"
 import { composePreparationPack } from "@/services/ai/pack-composer"
 
@@ -161,10 +150,10 @@ export function ConnectPanel({
           </span>
         </div>
 
-        <h2 className="font-serif text-xl md:text-2xl font-bold text-ink-primary tracking-tight break-words">
+        <h2 className="font-serif text-xl md:text-2xl font-bold text-ink-primary tracking-tight wrap-break-word">
           Where to Go Next
         </h2>
-        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed max-w-2xl break-words">
+        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed max-w-2xl wrap-break-word">
           You have reviewed, verified, and organized the evidence in{" "}
           <strong className="text-ink-primary font-medium">{document.name}</strong>.
           Use this guide to access verified statutory portals, explore official legal aid channels, or prepare for consultation with a qualified legal professional.
@@ -183,7 +172,7 @@ export function ConnectPanel({
               <h4 className="font-semibold text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300">
                 Jurisdiction Limitation Notice
               </h4>
-              <p className="leading-relaxed text-ink-secondary text-xs break-words">
+              <p className="leading-relaxed text-ink-secondary text-xs wrap-break-word">
                 {resolution.limitationMessage}
               </p>
             </div>
@@ -256,10 +245,10 @@ export function ConnectPanel({
                   <div className="flex items-start gap-2">
                     <div className="size-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
                     <div className="min-w-0">
-                      <span className="font-semibold text-ink-primary text-xs block break-words">
+                      <span className="font-semibold text-ink-primary text-xs block wrap-break-word">
                         {item.title}
                       </span>
-                      <span className="text-[11px] text-ink-secondary leading-relaxed block break-words">
+                      <span className="text-[11px] text-ink-secondary leading-relaxed block wrap-break-word">
                         {item.hint}
                       </span>
                     </div>
@@ -305,20 +294,20 @@ export function ConnectPanel({
                   </div>
 
                   <div className="min-w-0">
-                    <h4 className="font-semibold text-xs md:text-sm text-ink-primary break-words">
+                    <h4 className="font-semibold text-xs md:text-sm text-ink-primary wrap-break-word">
                       {res.title}
                     </h4>
-                    <span className="text-[11px] text-ink-muted block mt-0.5 break-words">
+                    <span className="text-[11px] text-ink-muted block mt-0.5 wrap-break-word">
                       {res.organization}
                     </span>
                   </div>
 
-                  <p className="text-xs text-ink-secondary leading-relaxed break-words">
+                  <p className="text-xs text-ink-secondary leading-relaxed wrap-break-word">
                     {res.description}
                   </p>
 
                   {res.relevanceHint && (
-                    <p className="text-[11px] text-ink-muted bg-paper-contrast/50 p-2 rounded border border-border/40 break-words">
+                    <p className="text-[11px] text-ink-muted bg-paper-contrast/50 p-2 rounded border border-border/40 wrap-break-word">
                       <strong className="text-ink-primary font-medium">Use for:</strong> {res.relevanceHint}
                     </p>
                   )}
@@ -369,10 +358,10 @@ export function ConnectPanel({
                     <span className="font-mono text-[10px] font-semibold text-primary uppercase tracking-wider block">
                       Statutory Legal Services
                     </span>
-                    <h4 className="font-serif font-bold text-sm md:text-base text-ink-primary mt-0.5 break-words">
+                    <h4 className="font-serif font-bold text-sm md:text-base text-ink-primary mt-0.5 wrap-break-word">
                       {res.title}
                     </h4>
-                    <span className="text-[11px] text-ink-muted block mt-0.5 break-words">
+                    <span className="text-[11px] text-ink-muted block mt-0.5 wrap-break-word">
                       {res.organization}
                     </span>
                   </div>
@@ -381,7 +370,7 @@ export function ConnectPanel({
                   </span>
                 </div>
 
-                <p className="text-xs text-ink-secondary leading-relaxed break-words">
+                <p className="text-xs text-ink-secondary leading-relaxed wrap-break-word">
                   {res.description}
                 </p>
 
@@ -389,7 +378,7 @@ export function ConnectPanel({
                   <strong className="text-ink-primary font-medium block">
                     Statutory Eligibility (Section 12 of the Legal Services Authorities Act, 1987):
                   </strong>
-                  <p className="leading-relaxed break-words">
+                  <p className="leading-relaxed wrap-break-word">
                     Free legal aid is available to women, children, members of SC/ST communities, industrial workmen, persons with disabilities, custody inmates, and persons whose annual income falls below statutory income ceilings set by individual States.
                   </p>
                 </div>
@@ -426,7 +415,7 @@ export function ConnectPanel({
           </h3>
         </div>
 
-        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed break-words">
+        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed wrap-break-word">
           LawLens is a legal document comprehension and evidence-grounding platform. It does not provide legal advice, draft enforceable filings, predict dispute outcomes, or act as an advocate.
         </p>
 

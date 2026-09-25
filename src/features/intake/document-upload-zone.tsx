@@ -5,18 +5,12 @@ import {
   UploadCloud,
   FileText,
   AlertCircle,
-  CheckCircle2,
   ShieldCheck,
-  FileCode,
-  File,
-  ArrowRight,
-  Info,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   MAX_FILE_SIZE_BYTES,
-  SUPPORTED_EXTENSIONS,
   validateFileMetadata,
   processLocalFile,
   formatFileSize,
@@ -100,11 +94,7 @@ export function DocumentUploadZone({
 
   const handleSampleSelect = (sample: UploadedDocument) => {
     setValidationError(null)
-    onProcessingStart()
-    // Trigger intentional transition
-    setTimeout(() => {
-      onDocumentReady(sample)
-    }, 600)
+    onDocumentReady(sample)
   }
 
   return (

@@ -1,0 +1,30 @@
+[
+  {
+    "label": "A",
+    "status": 200,
+    "latencyMs": 636,
+    "error": "",
+    "success": true
+  },
+  {
+    "label": "B",
+    "status": 200,
+    "latencyMs": 687,
+    "error": "",
+    "success": true
+  },
+  {
+    "label": "C",
+    "status": 200,
+    "latencyMs": 542,
+    "error": "",
+    "success": true
+  },
+  {
+    "label": "D",
+    "status": 200,
+    "latencyMs": 741,
+    "error": "",
+    "success": true
+  }
+]

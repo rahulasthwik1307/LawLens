@@ -2,9 +2,6 @@ import { z } from "zod"
 import type {
   ComparisonDifferenceType,
   ComparisonReviewStatus,
-  RawComparisonOutput,
-  RawDifferenceEvidence,
-  RawDifferenceItem,
 } from "./types.ts"
 
 export const RawDifferenceEvidenceSchema = z.object({

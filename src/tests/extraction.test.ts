@@ -10,7 +10,6 @@ import {
 } from "../services/documents/document-extractor.ts"
 import {
   validateFileMetadata,
-  processLocalFile,
   SUPPORTED_EXTENSIONS,
 } from "../lib/document-validation.ts"
 import { normalizeDocument } from "../services/ai/document-normalizer.ts"

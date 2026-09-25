@@ -3,7 +3,6 @@ import assert from "node:assert/strict"
 import { composePreparationPack } from "../services/ai/pack-composer.ts"
 import {
   validatePreparationPackSchema,
-  ProfessionalPreparationPackSchema,
 } from "../services/ai/pack-schema.ts"
 import { SAMPLE_DOCUMENTS } from "../lib/sample-documents.ts"
 import type {

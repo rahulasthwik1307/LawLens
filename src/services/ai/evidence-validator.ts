@@ -349,8 +349,9 @@ export function verifyQAEvidence(
 export function verifyDifferenceEvidenceList(
   rawList: RawDifferenceEvidence[] | undefined,
   doc: NormalizedDocument,
-  docDesignation: "A" | "B"
+  docDesignation?: "A" | "B"
 ): DifferenceEvidenceItem[] {
+  void docDesignation
   if (!rawList || rawList.length === 0) return []
 
   const verified: DifferenceEvidenceItem[] = []

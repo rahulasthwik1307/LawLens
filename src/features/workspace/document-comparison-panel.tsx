@@ -3,22 +3,12 @@
 import * as React from "react"
 import {
   GitCompare,
-  ArrowRight,
   ShieldCheck,
   AlertTriangle,
-  CheckCircle2,
-  FileText,
   Sparkles,
-  RotateCcw,
-  SlidersHorizontal,
-  ChevronDown,
   Info,
-  Scale,
   Eye,
-  PlusCircle,
-  MinusCircle,
   RefreshCw,
-  Hash,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -49,7 +39,6 @@ export function DocumentComparisonPanel({
   currentDocument,
   availableDocuments = [],
   onSelectEvidence,
-  onActiveViewerDocChange,
   onComparisonCompleted,
 }: DocumentComparisonPanelProps) {
   // Combine sample documents and user uploaded documents (deduped by ID)
@@ -602,7 +591,7 @@ function DifferenceCard({
           {diff.evidenceA.length > 0 ? (
             diff.evidenceA.map((ev, i) => (
               <div key={i} className="space-y-2 min-w-0">
-                <blockquote className="text-[11px] font-serif italic text-ink-primary border-l-2 border-blue-500/50 pl-2.5 py-0.5 break-words">
+                <blockquote className="text-[11px] font-serif italic text-ink-primary border-l-2 border-blue-500/50 pl-2.5 py-0.5 wrap-break-word">
                   &ldquo;{ev.sourceText}&rdquo;
                 </blockquote>
                 <div className="flex flex-wrap items-center justify-between gap-1.5 min-w-0">
@@ -634,7 +623,7 @@ function DifferenceCard({
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-ink-muted italic py-1 break-words">
+            <p className="text-[11px] text-ink-muted italic py-1 wrap-break-word">
               Provision not present in Document A (introduced in Document B).
             </p>
           )}
@@ -657,7 +646,7 @@ function DifferenceCard({
           {diff.evidenceB.length > 0 ? (
             diff.evidenceB.map((ev, i) => (
               <div key={i} className="space-y-2 min-w-0">
-                <blockquote className="text-[11px] font-serif italic text-ink-primary border-l-2 border-emerald-500/50 pl-2.5 py-0.5 break-words">
+                <blockquote className="text-[11px] font-serif italic text-ink-primary border-l-2 border-emerald-500/50 pl-2.5 py-0.5 wrap-break-word">
                   &ldquo;{ev.sourceText}&rdquo;
                 </blockquote>
                 <div className="flex flex-wrap items-center justify-between gap-1.5 min-w-0">
@@ -689,7 +678,7 @@ function DifferenceCard({
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-ink-muted italic py-1 break-words">
+            <p className="text-[11px] text-ink-muted italic py-1 wrap-break-word">
               Provision omitted in Document B (present only in Document A).
             </p>
           )}

@@ -13,7 +13,6 @@ export function Header() {
   // Track active landing-page section when on "/"
   React.useEffect(() => {
     if (pathname !== "/") {
-      setActiveSection(null)
       return
     }
 
@@ -243,13 +242,13 @@ export function Header() {
             >
               India-First
             </a>
-            <a
+            <Link
               href="/#standards"
               onClick={() => setMobileMenuOpen(false)}
               className="py-1.5 hover:text-ink-primary text-xs text-ink-muted"
             >
               Safety Principles
-            </a>
+            </Link>
           </nav>
           <div className="pt-2">
             <Link

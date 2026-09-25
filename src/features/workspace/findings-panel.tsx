@@ -16,11 +16,9 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
-  Sparkles,
-  ExternalLink,
   ChevronsUpDown,
+  Compass,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DocumentAnalysisResult,
@@ -29,7 +27,6 @@ import {
   LegalFinding,
 } from "@/services/ai/types"
 import { isFindingActionable } from "@/services/ai/legal-action-planner"
-import { Compass } from "lucide-react"
 
 interface FindingsPanelProps {
   analysis: DocumentAnalysisResult
@@ -142,7 +139,7 @@ export function FindingsPanel({
         </div>
 
         {/* Compact Plain Language Summary */}
-        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed border-t border-border/60 pt-2.5 break-words">
+        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed border-t border-border/60 pt-2.5 wrap-break-word">
           {analysis.summary}
         </p>
 
@@ -285,10 +282,10 @@ export function FindingsPanel({
 
                 {/* Finding Title & Plain Language Explanation */}
                 <div className="space-y-1 min-w-0">
-                  <h4 className="font-serif text-sm md:text-[15px] font-bold text-ink-primary leading-snug break-words">
+                  <h4 className="font-serif text-sm md:text-[15px] font-bold text-ink-primary leading-snug wrap-break-word">
                     {finding.title}
                   </h4>
-                  <p className="text-xs text-ink-secondary leading-relaxed break-words">
+                  <p className="text-xs text-ink-secondary leading-relaxed wrap-break-word">
                     {finding.explanation}
                   </p>
                 </div>
@@ -297,7 +294,7 @@ export function FindingsPanel({
                 {finding.uncertainty && (
                   <div className="rounded-md bg-amber-50/90 border border-amber-200 p-2 text-xs text-amber-900 flex items-start gap-1.5 min-w-0">
                     <AlertCircle className="size-3.5 text-amber-700 shrink-0 mt-0.5" />
-                    <p className="leading-snug text-[11px] break-words">{finding.uncertainty}</p>
+                    <p className="leading-snug text-[11px] wrap-break-word">{finding.uncertainty}</p>
                   </div>
                 )}
               </div>
@@ -361,7 +358,7 @@ export function FindingsPanel({
                   {/* Expanded Verbatim Excerpt */}
                   {isExcerptExpanded && (
                     <div className="pt-2 border-t border-border/50 space-y-2 animate-in fade-in duration-150 min-w-0">
-                      <blockquote className="font-serif text-xs text-ink-primary italic border-l-2 border-primary/60 pl-2.5 py-1 leading-relaxed bg-paper-contrast/40 rounded-r break-words">
+                      <blockquote className="font-serif text-xs text-ink-primary italic border-l-2 border-primary/60 pl-2.5 py-1 leading-relaxed bg-paper-contrast/40 rounded-r wrap-break-word">
                         &ldquo;{finding.evidence.sourceText}&rdquo;
                       </blockquote>
                       <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-ink-muted font-mono pt-0.5 min-w-0">

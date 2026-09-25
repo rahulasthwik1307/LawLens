@@ -2,7 +2,6 @@ import type { UploadedDocument } from "../../types/document.ts"
 import { AIProviderError } from "./types.ts"
 import type {
   ActionCandidateInput,
-  ActionGenerationRequest,
   ActionGenerationResult,
   ActionItem,
   ComparisonDifference,

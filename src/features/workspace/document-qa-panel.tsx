@@ -8,7 +8,6 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
-  RotateCcw,
   BookOpen,
   Info,
   CornerDownLeft,
@@ -67,7 +66,6 @@ export function DocumentQAPanel({
   // Loading steps animation
   React.useEffect(() => {
     if (!loading) {
-      setLoadingStep(0)
       return
     }
 
@@ -95,6 +93,7 @@ export function DocumentQAPanel({
     }
 
     setLoading(true)
+    setLoadingStep(0)
     setErrorMessage(null)
 
     try {
@@ -132,6 +131,7 @@ export function DocumentQAPanel({
       )
     } finally {
       setLoading(false)
+      setLoadingStep(0)
     }
   }
 
@@ -175,14 +175,14 @@ export function DocumentQAPanel({
           )}
         </div>
 
-        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed break-words">
+        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed wrap-break-word">
           Ask specific questions about this document. Every answer is retrieved from relevant clauses, verified against the source text, and mapped to exact line numbers.
         </p>
 
         {/* Disclaimer Notice */}
         <div className="flex items-center gap-1.5 text-[11px] text-ink-muted bg-paper-contrast/60 px-3 py-1.5 rounded-md border border-border/50 min-w-0">
           <Info className="size-3.5 text-primary shrink-0" />
-          <span className="break-words">
+          <span className="wrap-break-word">
             Answers provide document-grounded legal information, not legal advice or representation.
           </span>
         </div>
@@ -234,7 +234,7 @@ export function DocumentQAPanel({
             className="rounded-lg bg-red-50 border border-red-200 p-2.5 text-xs text-red-900 flex items-start gap-2 min-w-0"
           >
             <AlertCircle className="size-4 text-red-600 shrink-0 mt-0.5" />
-            <p className="flex-1 leading-normal break-words">{errorMessage}</p>
+            <p className="flex-1 leading-normal wrap-break-word">{errorMessage}</p>
             <button
               type="button"
               onClick={() => setErrorMessage(null)}
@@ -258,7 +258,7 @@ export function DocumentQAPanel({
                   type="button"
                   onClick={() => handleSuggestionClick(suggestion)}
                   disabled={loading}
-                  className="text-[11px] text-ink-secondary bg-paper hover:bg-paper-contrast hover:text-ink-primary border border-border/80 px-2.5 py-1 rounded-md transition-colors text-left disabled:opacity-50 break-words"
+                  className="text-[11px] text-ink-secondary bg-paper hover:bg-paper-contrast hover:text-ink-primary border border-border/80 px-2.5 py-1 rounded-md transition-colors text-left disabled:opacity-50 wrap-break-word"
                 >
                   {suggestion}
                 </button>
@@ -283,7 +283,7 @@ export function DocumentQAPanel({
                   loadingStep >= 0 ? "bg-primary" : "bg-border"
                 }`}
               />
-              <span className={loadingStep === 0 ? "font-semibold text-ink-primary break-words" : "break-words"}>
+              <span className={loadingStep === 0 ? "font-semibold text-ink-primary wrap-break-word" : "wrap-break-word"}>
                 Retrieving targeted clauses and surrounding context...
               </span>
             </div>
@@ -293,7 +293,7 @@ export function DocumentQAPanel({
                   loadingStep >= 1 ? "bg-primary" : "bg-border"
                 }`}
               />
-              <span className={loadingStep === 1 ? "font-semibold text-ink-primary break-words" : "break-words"}>
+              <span className={loadingStep === 1 ? "font-semibold text-ink-primary wrap-break-word" : "wrap-break-word"}>
                 Synthesizing evidence with Groq GPT-OSS...
               </span>
             </div>
@@ -303,7 +303,7 @@ export function DocumentQAPanel({
                   loadingStep >= 2 ? "bg-primary" : "bg-border"
                 }`}
               />
-              <span className={loadingStep === 2 ? "font-semibold text-ink-primary break-words" : "break-words"}>
+              <span className={loadingStep === 2 ? "font-semibold text-ink-primary wrap-break-word" : "wrap-break-word"}>
                 Verifying citations against original document lines...
               </span>
             </div>
@@ -327,7 +327,7 @@ export function DocumentQAPanel({
                     Question
                   </span>
                 </div>
-                <h3 className="font-serif text-base font-bold text-ink-primary break-words">
+                <h3 className="font-serif text-base font-bold text-ink-primary wrap-break-word">
                   {result.question}
                 </h3>
               </div>
@@ -367,7 +367,7 @@ export function DocumentQAPanel({
               <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider block">
                 Answer
               </span>
-              <p className="text-xs md:text-sm text-ink-primary leading-relaxed break-words">
+              <p className="text-xs md:text-sm text-ink-primary leading-relaxed wrap-break-word">
                 {result.answer}
               </p>
             </div>
@@ -376,7 +376,7 @@ export function DocumentQAPanel({
             {result.uncertainty && (
               <div className="rounded-md bg-amber-50/90 border border-amber-200 p-2.5 text-xs text-amber-900 flex items-start gap-2 min-w-0">
                 <AlertCircle className="size-4 text-amber-700 shrink-0 mt-0.5" />
-                <p className="leading-normal break-words">{result.uncertainty}</p>
+                <p className="leading-normal wrap-break-word">{result.uncertainty}</p>
               </div>
             )}
 
@@ -422,7 +422,7 @@ export function DocumentQAPanel({
                           </span>
                         </div>
 
-                        <blockquote className="font-serif text-xs text-ink-primary italic border-l-2 border-primary/60 pl-2.5 py-0.5 leading-relaxed bg-paper-contrast/30 rounded-r break-words">
+                        <blockquote className="font-serif text-xs text-ink-primary italic border-l-2 border-primary/60 pl-2.5 py-0.5 leading-relaxed bg-paper-contrast/30 rounded-r wrap-break-word">
                           &ldquo;{item.sourceText}&rdquo;
                         </blockquote>
 

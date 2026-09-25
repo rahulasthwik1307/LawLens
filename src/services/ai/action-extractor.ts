@@ -1,8 +1,6 @@
 import type {
   ActionCandidateInput,
   ActionItem,
-  ActionPriority,
-  ActionType,
   ComparisonDifference,
   LegalFinding,
   NormalizedDocument,

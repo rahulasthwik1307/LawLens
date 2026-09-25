@@ -8,7 +8,6 @@ import {
 } from "../services/ai/action-extractor.ts"
 import {
   validateActionSchema,
-  ActionOutputSchema,
 } from "../services/ai/action-schema.ts"
 import {
   verifyActionEvidence,
@@ -23,6 +22,7 @@ import type {
   LegalAnalysisProvider,
   LegalFinding,
   RawActionGenerationOutput,
+  RawAnalysisOutput,
 } from "../services/ai/types.ts"
 import type { UploadedDocument } from "../types/document.ts"
 
@@ -81,7 +81,7 @@ const mockDifference: ComparisonDifference = {
 class MockActionProvider implements LegalAnalysisProvider {
   readonly id = "mock_action_provider"
   readonly name = "Mock Action Provider"
-  async analyzeDocument(): Promise<any> {
+  async analyzeDocument(): Promise<RawAnalysisOutput> {
     return {
       documentType: "Commercial Lease",
       summary: "Test summary",

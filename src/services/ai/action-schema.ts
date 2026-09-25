@@ -2,8 +2,6 @@ import { z } from "zod"
 import type {
   ActionPriority,
   ActionType,
-  RawActionGenerationOutput,
-  RawActionItemInput,
 } from "./types.ts"
 
 export const RawActionItemInputSchema = z.object({

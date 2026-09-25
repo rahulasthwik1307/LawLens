@@ -413,13 +413,17 @@ export class AIProviderError extends Error {
   readonly statusCode: number
   readonly retryable: boolean
   readonly userMessage: string
+  readonly retryAfterSeconds?: number
+  readonly subCategory?: string
 
   constructor(
     code: AIErrorCode,
     message: string,
     userMessage: string,
     statusCode: number = 500,
-    retryable: boolean = false
+    retryable: boolean = false,
+    retryAfterSeconds?: number,
+    subCategory?: string
   ) {
     super(message)
     this.name = "AIProviderError"
@@ -427,6 +431,8 @@ export class AIProviderError extends Error {
     this.userMessage = userMessage
     this.statusCode = statusCode
     this.retryable = retryable
+    this.retryAfterSeconds = retryAfterSeconds
+    this.subCategory = subCategory
   }
 }
 

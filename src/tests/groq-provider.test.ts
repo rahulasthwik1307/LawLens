@@ -3,6 +3,7 @@ import assert from "node:assert/strict"
 import {
   GroqLegalAnalysisProvider,
   buildGroqRequestBody,
+  classifyGroq400Detail,
 } from "../services/ai/providers/groq-provider.ts"
 import {
   ANALYSIS_JSON_SCHEMA,
@@ -13,17 +14,19 @@ import {
 import { LawLensAIService } from "../services/ai/ai-service.ts"
 import { AIProviderError } from "../services/ai/types.ts"
 import { validateAnalysisSchema } from "../services/ai/analysis-schema.ts"
-import { validateQASchema } from "../services/ai/qa-schema.ts"
 import { validateComparisonSchema } from "../services/ai/comparison-schema.ts"
-import { validateActionSchema } from "../services/ai/action-schema.ts"
 import type {
   LegalAnalysisProvider,
-  LegalAnalysisRequest,
   RawAnalysisOutput,
   RawComparisonOutput,
 } from "../services/ai/types.ts"
 import { normalizeDocument } from "../services/ai/document-normalizer.ts"
 import type { UploadedDocument } from "../types/document.ts"
+import { resultCache } from "../services/ai/result-cache.ts"
+
+test.beforeEach(() => {
+  resultCache.clear()
+})
 
 const sampleDoc: UploadedDocument = {
   id: "doc_groq_test",
@@ -349,7 +352,8 @@ test("Test 4 — Malformed primary output (MALFORMED_OUTPUT/422) is non-recovera
           },
         })
       },
-      (err: any) => {
+      (err: unknown) => {
+        assert(err instanceof AIProviderError)
         // Error should be MALFORMED_OUTPUT (from primary or fallback) or PROVIDER_UNAVAILABLE (dual fail)
         const validCodes = ["MALFORMED_OUTPUT", "PROVIDER_UNAVAILABLE"]
         assert.ok(validCodes.includes(err.code), `Unexpected error code: ${err.code}`)
@@ -372,7 +376,7 @@ test("Test 5 — Strict structured output does not bypass evidence verification"
     readonly name = "Groq"
     readonly modelName = "Groq · GPT-OSS 120B"
 
-    async analyzeDocument(_request: LegalAnalysisRequest): Promise<RawAnalysisOutput> {
+    async analyzeDocument(): Promise<RawAnalysisOutput> {
       return {
         documentType: "Commercial Lease",
         summary: "Test summary",
@@ -694,17 +698,26 @@ test("Test 9 — Privacy-safe latency logging logs concise telemetry and omits d
 // ---------------------------------------------------------------------------
 test("Test 10 — buildGroqRequestBody generates exact strict JSON Schema payloads for all operations", () => {
   // 1. Analysis request payload
+  // DEFENSE-IN-DEPTH: reasoning_effort must NOT be present when using json_schema.
+  // It causes the model to emit reasoning tokens that consume completion budget,
+  // risking output truncation. (Root cause of 400 is max_completion_tokens truncation).
   const analysisBody = buildGroqRequestBody({
     model: "openai/gpt-oss-120b",
     systemInstruction: "system instruction",
     userPrompt: "user prompt",
     jsonSchema: ANALYSIS_JSON_SCHEMA,
-    reasoningEffort: "low",
+    reasoningEffort: "low", // accepted by interface but must NOT appear in output
     temperature: 0.1,
   })
 
   assert.strictEqual(analysisBody.model, "openai/gpt-oss-120b")
-  assert.strictEqual(analysisBody.reasoning_effort, "low")
+  // DEFENSE-IN-DEPTH: reasoning_effort must be ABSENT when json_schema is used
+  // to avoid consuming completion tokens and aggravating truncation.
+  assert.strictEqual(
+    analysisBody.reasoning_effort,
+    undefined,
+    "reasoning_effort must be omitted when using strict json_schema structured outputs"
+  )
   assert.strictEqual(analysisBody.temperature, 0.1)
   const analysisFmt = analysisBody.response_format as Record<string, unknown>
   assert.strictEqual(analysisFmt.type, "json_schema")
@@ -721,6 +734,8 @@ test("Test 10 — buildGroqRequestBody generates exact strict JSON Schema payloa
     jsonSchema: QA_JSON_SCHEMA,
   })
   assert.strictEqual(qaBody.model, "openai/gpt-oss-20b")
+  // Also must not contain reasoning_effort
+  assert.strictEqual(qaBody.reasoning_effort, undefined, "QA payload must omit reasoning_effort")
   const qaFmt = qaBody.response_format as Record<string, unknown>
   assert.strictEqual(qaFmt.type, "json_schema")
   const qaSchemaObj = qaFmt.json_schema as Record<string, unknown>
@@ -734,6 +749,7 @@ test("Test 10 — buildGroqRequestBody generates exact strict JSON Schema payloa
     userPrompt: "comp prompt",
     jsonSchema: COMPARISON_JSON_SCHEMA,
   })
+  assert.strictEqual(compBody.reasoning_effort, undefined, "Comparison payload must omit reasoning_effort")
   const compFmt = compBody.response_format as Record<string, unknown>
   assert.strictEqual(compFmt.type, "json_schema")
   const compSchemaObj = compFmt.json_schema as Record<string, unknown>
@@ -747,6 +763,7 @@ test("Test 10 — buildGroqRequestBody generates exact strict JSON Schema payloa
     userPrompt: "action prompt",
     jsonSchema: ACTION_JSON_SCHEMA,
   })
+  assert.strictEqual(actionBody.reasoning_effort, undefined, "Action payload must omit reasoning_effort")
   const actionFmt = actionBody.response_format as Record<string, unknown>
   assert.strictEqual(actionFmt.type, "json_schema")
   const actionSchemaObj = actionFmt.json_schema as Record<string, unknown>
@@ -761,6 +778,8 @@ test("Test 10 — buildGroqRequestBody generates exact strict JSON Schema payloa
   })
   const genericFmt = genericBody.response_format as Record<string, unknown>
   assert.strictEqual(genericFmt.type, "json_object")
+  // Even in json_object mode we omit reasoning_effort universally (LawLens always uses structured outputs)
+  assert.strictEqual(genericBody.reasoning_effort, undefined)
 })
 
 // ---------------------------------------------------------------------------
@@ -776,8 +795,9 @@ test("Security — GROQ_API_KEY is never defined as NEXT_PUBLIC and not exposed 
 
 test("React Lifecycle — Q&A history updater does not invoke callbacks during render/state calculation", () => {
   let callbackInvocationCount = 0
-  const onQAHistoryChange = (_newHistory: unknown[]) => {
+  const onQAHistoryChange = (newHistory: unknown[]) => {
     callbackInvocationCount++
+    assert.strictEqual(newHistory.length, 2)
   }
 
   const existingHistory: Array<{ answer: string }> = [{ answer: "Previous answer" }]
@@ -911,8 +931,8 @@ test("Compare Test 1 — Primary GPT-OSS 120B receives comparison schema, sets m
     assert.ok(capturedBody)
     const reqPayload = capturedBody as Record<string, unknown>
     assert.strictEqual(reqPayload.model, "openai/gpt-oss-120b")
-    // max_completion_tokens from task policy for 'compare' task
-    assert.strictEqual(reqPayload.max_completion_tokens, 2500)
+    // max_completion_tokens from task policy for 'compare' task (increased to 4000)
+    assert.strictEqual(reqPayload.max_completion_tokens, 4000)
 
     const responseFormat = reqPayload.response_format as Record<string, unknown>
     assert.strictEqual(responseFormat.type, "json_schema")
@@ -982,7 +1002,7 @@ test("Compare Test 2 — Primary timeout (504) triggers fallback to GPT-OSS 20B 
     const fallbackReq = capturedBodies[capturedBodies.length - 1]
     assert.strictEqual(primaryReq.model, "openai/gpt-oss-120b")
     assert.strictEqual(fallbackReq.model, "openai/gpt-oss-20b")
-    assert.strictEqual(fallbackReq.max_completion_tokens, 2500)
+    assert.strictEqual(fallbackReq.max_completion_tokens, 4000)
 
     const metrics = provider.lastMetrics!
     assert.strictEqual(metrics.fallbackUsed, true)
@@ -1190,3 +1210,179 @@ test("Compare Test 6 — Dual-provider failure surfaces safe user-facing error w
     globalThis.fetch = originalFetch
   }
 })
+
+// ---------------------------------------------------------------------------
+// Forensic Verification & 400 Error Classification Tests (2026-09-25)
+// ---------------------------------------------------------------------------
+
+test("Forensic Test 1 — classifyGroq400Detail correctly identifies TOKEN_LIMIT_EXCEEDED from Groq error message", () => {
+  // Exact Groq production error message
+  const exactProductionError =
+    "max completion tokens reached before generating a valid document: the output was truncated to fit max_completion_tokens and is missing required content. Increase max_completion_tokens. Error: jsonschema: '' does not validate with /required: missing properties: 'disputeResolution', 'reviewPoints'"
+
+  assert.strictEqual(
+    classifyGroq400Detail(exactProductionError),
+    "TOKEN_LIMIT_EXCEEDED",
+    "Must detect full production truncation error as TOKEN_LIMIT_EXCEEDED"
+  )
+
+  // Individual triggers
+  assert.strictEqual(
+    classifyGroq400Detail("the output was truncated to fit max_completion_tokens"),
+    "TOKEN_LIMIT_EXCEEDED"
+  )
+  assert.strictEqual(
+    classifyGroq400Detail("max_completion_tokens exceeded"),
+    "TOKEN_LIMIT_EXCEEDED"
+  )
+  assert.strictEqual(
+    classifyGroq400Detail("missing required content due to cutoff"),
+    "TOKEN_LIMIT_EXCEEDED"
+  )
+
+  // Regression check: reasoning conflict
+  assert.strictEqual(
+    classifyGroq400Detail("reasoning_effort is not supported with this schema"),
+    "REASONING_PARAM_CONFLICT"
+  )
+
+  // Other schemas & params
+  assert.strictEqual(
+    classifyGroq400Detail("json_schema strict validation error"),
+    "INVALID_JSON_SCHEMA"
+  )
+  assert.strictEqual(
+    classifyGroq400Detail("unknown query parameter foo"),
+    "INVALID_REQUEST_PARAMETER"
+  )
+})
+
+test("Forensic Test 2 — Groq HTTP 400 with TOKEN_LIMIT_EXCEEDED is recoverable and triggers fallback to 20B", async () => {
+  const originalFetch = globalThis.fetch
+  try {
+    const capturedBodies: Record<string, unknown>[] = []
+
+    globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(init?.body as string)
+      capturedBodies.push(body)
+
+      if (body.model === "openai/gpt-oss-120b") {
+        // Primary returns 400 with TOKEN_LIMIT_EXCEEDED (the production error)
+        return new Response(
+          JSON.stringify({
+            error: {
+              message:
+                "max completion tokens reached before generating a valid document: the output was truncated to fit max_completion_tokens and is missing required content.",
+            },
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        )
+      }
+
+      // Fallback succeeds with valid output
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify(validMockRawOutput),
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    }
+
+    const provider = new GroqLegalAnalysisProvider(
+      "test_key",
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b"
+    )
+
+    const result = await provider.analyzeDocument({
+      document: {
+        id: "doc_test_recoverable",
+        name: "test.txt",
+        jurisdiction: "India",
+        sourceText: sampleDoc.content,
+        lines: [{ lineNumber: 1, text: "Line 1" }],
+        lineCount: 1,
+        wordCount: 2,
+        metadata: { size: 10, mimeType: "text/plain", uploadedAt: new Date() },
+      },
+    })
+
+    // Recovery succeeded! Primary 400 (recoverable) -> fallback 200
+    assert.strictEqual(result.documentType, "Commercial Lease Agreement")
+    assert.strictEqual(provider.modelName, "Groq · GPT-OSS 20B fallback")
+    const metrics = provider.lastMetrics!
+    assert.strictEqual(metrics.fallbackUsed, true)
+    assert.strictEqual(metrics.primaryStatus, 400)
+    assert.strictEqual(metrics.fallbackStatus, 200)
+    assert.strictEqual(metrics.success, true)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test("Forensic Test 3 — Groq HTTP 400 with generic invalid parameter is NOT recoverable and does not fallback", async () => {
+  const originalFetch = globalThis.fetch
+  try {
+    const capturedBodies: Record<string, unknown>[] = []
+
+    globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(init?.body as string)
+      capturedBodies.push(body)
+
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: "Invalid parameter: unsupported configuration option",
+          },
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      )
+    }
+
+    const provider = new GroqLegalAnalysisProvider(
+      "test_key",
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b"
+    )
+
+    await assert.rejects(
+      async () => {
+        await provider.analyzeDocument({
+          document: {
+            id: "doc_test_non_recoverable",
+            name: "test.txt",
+            jurisdiction: "India",
+            sourceText: sampleDoc.content,
+            lines: [{ lineNumber: 1, text: "Line 1" }],
+            lineCount: 1,
+            wordCount: 2,
+            metadata: { size: 10, mimeType: "text/plain", uploadedAt: new Date() },
+          },
+        })
+      },
+      (err: unknown) => {
+        assert.ok(err instanceof AIProviderError)
+        const aerr = err as AIProviderError
+        assert.strictEqual(aerr.statusCode, 400)
+        assert.strictEqual(aerr.retryable, false)
+        return true
+      }
+    )
+
+    // Fallback must NOT be called for non-recoverable 400
+    assert.strictEqual(capturedBodies.length, 1, "Fallback must be skipped on non-recoverable 400")
+    const metrics = provider.lastMetrics!
+    assert.strictEqual(metrics.fallbackUsed, false)
+    assert.strictEqual(metrics.fallbackStatus, "skipped")
+    assert.strictEqual(metrics.success, false)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+

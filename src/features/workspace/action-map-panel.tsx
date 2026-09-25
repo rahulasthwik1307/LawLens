@@ -14,10 +14,7 @@ import {
   FileCheck,
   CheckSquare,
   Search,
-  Layers,
-  ArrowRight,
   ShieldCheck,
-  Calendar,
   AlertTriangle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -25,7 +22,6 @@ import { Badge } from "@/components/ui/badge"
 import type { UploadedDocument } from "@/types/document"
 import type {
   ActionItem,
-  ActionPriority,
   ActionStatus,
   ActionType,
   DocumentAnalysisResult,
@@ -140,19 +136,20 @@ export function ActionMapPanel({
   const [activePlannerFindingId, setActivePlannerFindingId] = React.useState<string | undefined>(
     initialSelectedFindingId
   )
+  const [prevInitialFindingId, setPrevInitialFindingId] = React.useState<string | undefined>(
+    initialSelectedFindingId
+  )
 
-  // React to finding selection from Findings panel
-  React.useEffect(() => {
-    if (initialSelectedFindingId) {
-      setActivePlannerFindingId(initialSelectedFindingId)
-      setActionViewMode("planner")
-    }
-  }, [initialSelectedFindingId])
+  // React to finding selection from Findings panel without cascading effect render
+  if (initialSelectedFindingId && initialSelectedFindingId !== prevInitialFindingId) {
+    setPrevInitialFindingId(initialSelectedFindingId)
+    setActivePlannerFindingId(initialSelectedFindingId)
+    setActionViewMode("planner")
+  }
 
   // Truthful loading stages
   React.useEffect(() => {
     if (!loading) {
-      setLoadingStep(0)
       return
     }
 
@@ -168,6 +165,7 @@ export function ActionMapPanel({
   const handleGenerateActions = async () => {
     if (loading) return
     setLoading(true)
+    setLoadingStep(0)
     setErrorMessage(null)
 
     try {
@@ -204,19 +202,19 @@ export function ActionMapPanel({
 
       if (!res.ok) {
         setErrorMessage(data?.error || "Action generation failed. Please try again.")
-        setLoading(false)
         return
       }
 
       const generatedActions = data?.result?.actions || []
       setActions(generatedActions)
       setIsGenerated(true)
-      setLoading(false)
-    } catch (err: unknown) {
+    } catch {
       setErrorMessage(
         "Network connection failed while contacting the action service. Please try again."
       )
+    } finally {
       setLoading(false)
+      setLoadingStep(0)
     }
   }
 
@@ -618,7 +616,7 @@ export function ActionMapPanel({
               </Button>
             </div>
           ) : (
-            filteredActions.map((action, idx) => {
+            filteredActions.map((action) => {
               const meta = ACTION_TYPE_META[action.type]
               const Icon = meta.icon
               const isReviewed = action.status === "reviewed"

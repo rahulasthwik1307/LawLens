@@ -3,7 +3,6 @@
 import * as React from "react"
 import Link from "next/link"
 import {
-  FileText,
   ArrowLeft,
   Copy,
   Check,
@@ -12,7 +11,6 @@ import {
   Info,
   Hash,
   BookOpen,
-  FileCode,
   AlertCircle,
   RotateCcw,
   X,
@@ -21,7 +19,6 @@ import {
   GitCompare,
   Briefcase,
   ArrowUpRight,
-  ChevronRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -92,6 +89,13 @@ export function DocumentWorkspace({
   const [actions, setActions] = React.useState<ActionItem[]>([])
   const [qaHistory, setQAHistory] = React.useState<DocumentQAResult[]>([])
   const [activeViewerDoc, setActiveViewerDoc] = React.useState<UploadedDocument>(document)
+  const [prevDocId, setPrevDocId] = React.useState(document.id)
+
+  if (document.id !== prevDocId) {
+    setPrevDocId(document.id)
+    setActiveViewerDoc(document)
+  }
+
   const [selectedPlannerFindingId, setSelectedPlannerFindingId] = React.useState<string | undefined>(undefined)
 
   const handlePlanFindingAction = (finding: LegalFinding) => {
@@ -102,10 +106,6 @@ export function DocumentWorkspace({
 
   // Mobile navigation tab state
   const [activeMobileTab, setActiveMobileTab] = React.useState<"document" | "ai">("document")
-
-  React.useEffect(() => {
-    setActiveViewerDoc(document)
-  }, [document])
 
   // Document lines and element refs for auto-scrolling to cited lines
   const lines = React.useMemo(() => {
@@ -367,7 +367,7 @@ export function DocumentWorkspace({
                       {lineNumber}
                     </span>
                   )}
-                  <p className="flex-1 min-w-0 whitespace-pre-wrap break-words font-normal">
+                  <p className="flex-1 min-w-0 whitespace-pre-wrap wrap-break-word font-normal">
                     {line || <span className="opacity-0">{"."}</span>}
                   </p>
                 </div>
@@ -805,7 +805,7 @@ export function DocumentWorkspace({
 
         {/* Primary Document Title */}
         <div className="space-y-1 min-w-0">
-          <h1 className="font-serif text-lg sm:text-xl md:text-2xl font-bold text-ink-primary leading-snug break-words">
+          <h1 className="font-serif text-lg sm:text-xl md:text-2xl font-bold text-ink-primary leading-snug wrap-break-word">
             {documentTitle}
           </h1>
 

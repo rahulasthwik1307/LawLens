@@ -3,14 +3,12 @@ import assert from "node:assert/strict"
 import {
   LEGAL_RESOURCES,
   resolveResourcesForJurisdiction,
-  type LegalResource,
 } from "../services/resources/resource-registry.ts"
 import {
-  LegalResourceSchema,
   validateResourceSchema,
 } from "../services/resources/resource-schema.ts"
 import { SAMPLE_DOCUMENTS } from "../lib/sample-documents.ts"
-import type { ActionItem, DocumentAnalysisResult } from "../services/ai/types.ts"
+import type { ActionItem } from "../services/ai/types.ts"
 
 const sampleDoc = SAMPLE_DOCUMENTS.find(
   (d) => d.id === "sample_commercial_lease"

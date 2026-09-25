@@ -1,13 +1,6 @@
 import { z } from "zod"
 import type { FindingConfidence } from "./types.ts"
 
-const ConfidenceEnum = z.enum([
-  "clear_in_document",
-  "supported_by_source",
-  "needs_review",
-  "unclear_from_document",
-])
-
 export const RawFindingSchema = z.object({
   title: z.string().min(1, "Finding title is required"),
   explanation: z.string().min(1, "Finding explanation is required"),

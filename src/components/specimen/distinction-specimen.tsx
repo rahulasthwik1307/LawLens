@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CheckCircle2, ArrowRight, ShieldCheck, Sparkles } from "lucide-react"
+import { Sparkles } from "lucide-react"
 
 export function DistinctionSpecimen() {
   const [hoveredSide, setHoveredSide] = React.useState<"source" | "explanation" | null>(null)
