@@ -28,12 +28,15 @@ import {
   FindingEvidence,
   LegalFinding,
 } from "@/services/ai/types"
+import { isFindingActionable } from "@/services/ai/legal-action-planner"
+import { Compass } from "lucide-react"
 
 interface FindingsPanelProps {
   analysis: DocumentAnalysisResult
   activeEvidence?: FindingEvidence | null
   onSelectEvidence: (evidence: FindingEvidence) => void
   onReanalyze?: () => void
+  onPlanAction?: (finding: LegalFinding) => void
 }
 
 const CATEGORY_META: Record<
@@ -56,6 +59,7 @@ export function FindingsPanel({
   activeEvidence,
   onSelectEvidence,
   onReanalyze,
+  onPlanAction,
 }: FindingsPanelProps) {
   const [selectedCategory, setSelectedCategory] = React.useState<string>("all")
   // Track which finding cards have their verbatim excerpt expanded
@@ -113,15 +117,15 @@ export function FindingsPanel({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
               onClick={handleToggleExpandAll}
-              className="text-[11px] h-7 px-2.5 gap-1 text-ink-secondary hover:text-ink-primary"
+              className="text-[11px] h-7 px-2.5 gap-1 text-ink-secondary hover:text-ink-primary whitespace-nowrap"
               title={allExpanded ? "Collapse all quotes" : "Expand all quotes"}
             >
-              <ChevronsUpDown className="size-3" />
+              <ChevronsUpDown className="size-3 shrink-0" />
               <span>{allExpanded ? "Collapse All Quotes" : "Expand All Quotes"}</span>
             </Button>
             {onReanalyze && (
@@ -129,7 +133,7 @@ export function FindingsPanel({
                 variant="outline"
                 size="sm"
                 onClick={onReanalyze}
-                className="text-[11px] h-7 px-2.5 text-ink-muted hover:text-ink-primary"
+                className="text-[11px] h-7 px-2.5 text-ink-muted hover:text-ink-primary whitespace-nowrap"
               >
                 Re-analyze
               </Button>
@@ -138,12 +142,12 @@ export function FindingsPanel({
         </div>
 
         {/* Compact Plain Language Summary */}
-        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed border-t border-border/60 pt-2.5">
+        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed border-t border-border/60 pt-2.5 break-words">
           {analysis.summary}
         </p>
 
         {/* Subordinate Legal Information Disclaimer */}
-        <div className="flex items-center gap-2 text-[11px] text-ink-muted bg-paper-contrast/50 px-3 py-1.5 rounded-md border border-border/50">
+        <div className="flex items-center gap-2 text-[11px] text-ink-muted bg-paper-contrast/50 px-3 py-1.5 rounded-md border border-border/50 min-w-0">
           <Info className="size-3.5 text-primary shrink-0" />
           <span className="leading-tight">
             LawLens provides structured informational analysis grounded in the source document. It does not provide legal advice.
@@ -152,22 +156,22 @@ export function FindingsPanel({
       </div>
 
       {/* Compact Filter Controls */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between px-0.5">
-          <span className="text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
+      <div className="space-y-2 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-1 px-0.5 min-w-0">
+          <span className="text-[11px] font-semibold text-ink-secondary uppercase tracking-wider whitespace-nowrap">
             Filter Findings by Category
           </span>
-          <span className="font-mono text-[11px] text-ink-muted">
+          <span className="font-mono text-[11px] text-ink-muted whitespace-nowrap">
             Showing {filteredFindings.length} of {analysis.findings.length}
           </span>
         </div>
 
         {/* Category Chips - Wraps naturally, never clipped */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 min-w-0">
           <button
             type="button"
             onClick={() => setSelectedCategory("all")}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 border ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 border whitespace-nowrap shrink-0 ${
               selectedCategory === "all"
                 ? "bg-primary text-primary-foreground border-primary font-semibold shadow-2xs"
                 : "bg-paper text-ink-secondary hover:text-ink-primary border-border/70 hover:bg-paper-contrast"
@@ -189,13 +193,13 @@ export function FindingsPanel({
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 border ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 border whitespace-nowrap shrink-0 ${
                   isSelected
                     ? "bg-primary text-primary-foreground border-primary font-semibold shadow-2xs"
                     : "bg-paper text-ink-secondary hover:text-ink-primary border-border/70 hover:bg-paper-contrast"
                 }`}
               >
-                <Icon className="size-3" />
+                <Icon className="size-3 shrink-0" />
                 <span>{meta.label}</span>
                 <span
                   className={`text-[10px] px-1 py-0.2 rounded-full font-mono ${
@@ -212,8 +216,8 @@ export function FindingsPanel({
         </div>
       </div>
 
-      {/* Findings Responsive Grid: 2 columns on wide viewports, 1 column on narrower */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3.5">
+      {/* Findings Responsive Grid: 2 columns on wide AI pane (>=640px), 1 column on narrower */}
+      <div className="grid grid-cols-1 @[640px]/ai:grid-cols-2 gap-3.5 min-w-0">
         {filteredFindings.map((finding) => {
           const meta = CATEGORY_META[finding.category] || {
             label: finding.category,
@@ -233,98 +237,112 @@ export function FindingsPanel({
             <div
               key={finding.id}
               tabIndex={0}
-              className={`rounded-xl border p-4 transition-all duration-150 space-y-2.5 outline-none focus-visible:ring-2 focus-visible:ring-ring flex flex-col justify-between ${
+              className={`rounded-xl border p-4 transition-all duration-150 space-y-2.5 outline-none focus-visible:ring-2 focus-visible:ring-ring flex flex-col justify-between min-w-0 @container/card ${
                 isCurrentActive
                   ? "bg-primary/5 border-primary shadow-xs ring-1 ring-primary/40"
                   : "bg-card border-border/80 hover:border-primary/40 hover:bg-card/95"
               }`}
             >
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 {/* Header: Category Badge + Confidence Badge */}
-                <div className="flex flex-wrap items-center justify-between gap-1.5">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <div className="flex items-center gap-1 text-[11px] font-semibold text-ink-primary bg-secondary px-2 py-0.5 rounded">
-                      <CategoryIcon className="size-3 text-primary" />
-                      <span>{meta.label}</span>
+                <div className="flex flex-wrap items-center justify-between gap-1.5 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                    <div className="flex items-center gap-1 text-[11px] font-semibold text-ink-primary bg-secondary px-2 py-0.5 rounded shrink-0">
+                      <CategoryIcon className="size-3 text-primary shrink-0" />
+                      <span className="whitespace-nowrap">{meta.label}</span>
                     </div>
 
                     {finding.confidence === "clear_in_document" && (
-                      <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                        <CheckCircle2 className="size-2.5 text-emerald-600" />
+                      <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap shrink-0">
+                        <CheckCircle2 className="size-2.5 text-emerald-600 shrink-0" />
                         <span>Clear</span>
                       </span>
                     )}
                     {finding.confidence === "supported_by_source" && (
-                      <span className="text-[10px] font-medium text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                      <span className="text-[10px] font-medium text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 whitespace-nowrap shrink-0">
                         Supported
                       </span>
                     )}
                     {finding.confidence === "needs_review" && (
-                      <span className="flex items-center gap-1 text-[10px] font-medium text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                        <AlertCircle className="size-2.5 text-amber-600" />
+                      <span className="flex items-center gap-1 text-[10px] font-medium text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 whitespace-nowrap shrink-0">
+                        <AlertCircle className="size-2.5 text-amber-600 shrink-0" />
                         <span>Review</span>
                       </span>
                     )}
                     {finding.confidence === "unclear_from_document" && (
-                      <span className="text-[10px] font-medium text-purple-800 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                      <span className="text-[10px] font-medium text-purple-800 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 whitespace-nowrap shrink-0">
                         Unclear
                       </span>
                     )}
                   </div>
 
                   {finding.evidence && finding.evidence.verificationStatus === "verified" && (
-                    <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-medium">
+                    <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-medium whitespace-nowrap shrink-0">
                       ✓ Verified
                     </span>
                   )}
                 </div>
 
                 {/* Finding Title & Plain Language Explanation */}
-                <div className="space-y-1">
-                  <h4 className="font-serif text-sm md:text-[15px] font-bold text-ink-primary leading-snug">
+                <div className="space-y-1 min-w-0">
+                  <h4 className="font-serif text-sm md:text-[15px] font-bold text-ink-primary leading-snug break-words">
                     {finding.title}
                   </h4>
-                  <p className="text-xs text-ink-secondary leading-relaxed">
+                  <p className="text-xs text-ink-secondary leading-relaxed break-words">
                     {finding.explanation}
                   </p>
                 </div>
 
                 {/* Uncertainty Callout if present */}
                 {finding.uncertainty && (
-                  <div className="rounded-md bg-amber-50/90 border border-amber-200 p-2 text-xs text-amber-900 flex items-start gap-1.5">
+                  <div className="rounded-md bg-amber-50/90 border border-amber-200 p-2 text-xs text-amber-900 flex items-start gap-1.5 min-w-0">
                     <AlertCircle className="size-3.5 text-amber-700 shrink-0 mt-0.5" />
-                    <p className="leading-snug text-[11px]">{finding.uncertainty}</p>
+                    <p className="leading-snug text-[11px] break-words">{finding.uncertainty}</p>
                   </div>
                 )}
               </div>
 
               {/* Progressive Disclosure Evidence Section */}
               {finding.evidence ? (
-                <div className="rounded-lg bg-paper border border-border/70 p-2.5 space-y-2 mt-2">
-                  {/* Compact Grounding Row */}
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-1.5 font-mono text-[11px] text-ink-secondary">
-                      <span className="font-bold text-ink-primary">
+                <div className="rounded-lg bg-paper border border-border/70 p-2.5 space-y-2 mt-2 min-w-0">
+                  {/* Robust, Fully-Wrapping Evidence Control Row */}
+                  <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-2 text-xs min-w-0 pt-0.5">
+                    {/* Left: Line Numbers & Grounded Indicator */}
+                    <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-ink-secondary min-w-0">
+                      <span className="font-bold text-ink-primary whitespace-nowrap">
                         Lines {finding.evidence.startLine}–{finding.evidence.endLine}
                       </span>
                       <span className="text-ink-muted">·</span>
-                      <span className="text-[10px] text-emerald-700 font-semibold">
+                      <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60 whitespace-nowrap">
                         Grounded
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Right: Controls Cluster - cleanly wraps inside card boundaries */}
+                    <div className="flex flex-wrap items-center gap-1.5 min-w-0 ml-auto justify-end">
+                      {isFindingActionable(finding) && onPlanAction && (
+                        <button
+                          type="button"
+                          onClick={() => onPlanAction(finding)}
+                          className="text-[11px] font-semibold text-primary hover:underline px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors flex items-center gap-1 whitespace-nowrap shrink-0"
+                          title="Open 7-step Legal Action Planner for this clause"
+                        >
+                          <Compass className="size-3 shrink-0" />
+                          <span>Plan steps →</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => toggleCardExcerpt(finding.id)}
-                        className="text-[11px] font-medium text-ink-muted hover:text-ink-primary px-1.5 py-0.5 rounded hover:bg-paper-contrast transition-colors flex items-center gap-1"
+                        className="text-[11px] font-medium text-ink-muted hover:text-ink-primary px-1.5 py-0.5 rounded hover:bg-paper-contrast transition-colors flex items-center gap-1 whitespace-nowrap shrink-0"
                         aria-expanded={isExcerptExpanded}
                       >
                         <span>{isExcerptExpanded ? "Hide Quote" : "Quote"}</span>
                         {isExcerptExpanded ? (
-                          <ChevronUp className="size-3" />
+                          <ChevronUp className="size-3 shrink-0" />
                         ) : (
-                          <ChevronDown className="size-3" />
+                          <ChevronDown className="size-3 shrink-0" />
                         )}
                       </button>
 
@@ -332,22 +350,22 @@ export function FindingsPanel({
                         variant={isCurrentActive ? "default" : "outline"}
                         size="sm"
                         onClick={() => onSelectEvidence(finding.evidence!)}
-                        className="gap-1 h-6 px-2 text-[11px] font-medium"
+                        className="gap-1 h-6 px-2 text-[11px] font-medium whitespace-nowrap shrink-0"
                       >
                         <span>{isCurrentActive ? "Viewing" : "View Source"}</span>
-                        <ChevronRight className="size-3" />
+                        <ChevronRight className="size-3 shrink-0" />
                       </Button>
                     </div>
                   </div>
 
                   {/* Expanded Verbatim Excerpt */}
                   {isExcerptExpanded && (
-                    <div className="pt-2 border-t border-border/50 space-y-2 animate-in fade-in duration-150">
-                      <blockquote className="font-serif text-xs text-ink-primary italic border-l-2 border-primary/60 pl-2.5 py-1 leading-relaxed bg-paper-contrast/40 rounded-r">
+                    <div className="pt-2 border-t border-border/50 space-y-2 animate-in fade-in duration-150 min-w-0">
+                      <blockquote className="font-serif text-xs text-ink-primary italic border-l-2 border-primary/60 pl-2.5 py-1 leading-relaxed bg-paper-contrast/40 rounded-r break-words">
                         &ldquo;{finding.evidence.sourceText}&rdquo;
                       </blockquote>
-                      <div className="flex items-center justify-between text-[10px] text-ink-muted font-mono pt-0.5">
-                        <span>
+                      <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-ink-muted font-mono pt-0.5 min-w-0">
+                        <span className="truncate">
                           {finding.evidence.verificationStatus === "verified"
                             ? "Verbatim document excerpt"
                             : "Unverified quote"}
@@ -355,7 +373,7 @@ export function FindingsPanel({
                         <button
                           type="button"
                           onClick={() => onSelectEvidence(finding.evidence!)}
-                          className="text-primary hover:underline font-semibold"
+                          className="text-primary hover:underline font-semibold whitespace-nowrap shrink-0"
                         >
                           Highlight in Document →
                         </button>

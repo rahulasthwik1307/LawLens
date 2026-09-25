@@ -33,6 +33,7 @@ import {
   DocumentComparisonResult,
   DocumentQAResult,
   FindingEvidence,
+  LegalFinding,
 } from "@/services/ai/types"
 import { AnalysisLoadingView } from "./analysis-loading-view"
 import { FindingsPanel } from "./findings-panel"
@@ -91,6 +92,13 @@ export function DocumentWorkspace({
   const [actions, setActions] = React.useState<ActionItem[]>([])
   const [qaHistory, setQAHistory] = React.useState<DocumentQAResult[]>([])
   const [activeViewerDoc, setActiveViewerDoc] = React.useState<UploadedDocument>(document)
+  const [selectedPlannerFindingId, setSelectedPlannerFindingId] = React.useState<string | undefined>(undefined)
+
+  const handlePlanFindingAction = (finding: LegalFinding) => {
+    setSelectedPlannerFindingId(finding.id)
+    setWorkspaceMode("actions")
+    setActiveMobileTab("ai")
+  }
 
   // Mobile navigation tab state
   const [activeMobileTab, setActiveMobileTab] = React.useState<"document" | "ai">("document")
@@ -359,7 +367,7 @@ export function DocumentWorkspace({
                       {lineNumber}
                     </span>
                   )}
-                  <p className="flex-1 whitespace-pre-wrap wrap-break-word font-normal">
+                  <p className="flex-1 min-w-0 whitespace-pre-wrap break-words font-normal">
                     {line || <span className="opacity-0">{"."}</span>}
                   </p>
                 </div>
@@ -415,7 +423,7 @@ export function DocumentWorkspace({
         <div
           role="tablist"
           aria-label="AI Workspace Sections"
-          className="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-paper-contrast/60 p-1 rounded-lg border border-border/70 text-xs font-medium"
+          className="grid grid-cols-3 @[540px]/ai:grid-cols-6 gap-1 bg-paper-contrast/60 p-1 rounded-lg border border-border/70 text-xs font-medium min-w-0"
         >
           <button
             type="button"
@@ -423,14 +431,14 @@ export function DocumentWorkspace({
             role="tab"
             aria-selected={workspaceMode === "findings"}
             onClick={() => setWorkspaceMode("findings")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 min-w-0 ${
               workspaceMode === "findings"
                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                 : "text-ink-secondary hover:text-ink-primary hover:bg-paper"
             }`}
           >
-            <Sparkles className="size-3.5" />
-            <span>Findings</span>
+            <Sparkles className="size-3.5 shrink-0" />
+            <span className="truncate">Findings</span>
           </button>
 
           <button
@@ -439,14 +447,14 @@ export function DocumentWorkspace({
             role="tab"
             aria-selected={workspaceMode === "qa"}
             onClick={() => setWorkspaceMode("qa")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 min-w-0 ${
               workspaceMode === "qa"
                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                 : "text-ink-secondary hover:text-ink-primary hover:bg-paper"
             }`}
           >
-            <HelpCircle className="size-3.5" />
-            <span>Q&A</span>
+            <HelpCircle className="size-3.5 shrink-0" />
+            <span className="truncate">Q&A</span>
           </button>
 
           <button
@@ -455,14 +463,14 @@ export function DocumentWorkspace({
             role="tab"
             aria-selected={workspaceMode === "compare"}
             onClick={() => setWorkspaceMode("compare")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 min-w-0 ${
               workspaceMode === "compare"
                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                 : "text-ink-secondary hover:text-ink-primary hover:bg-paper"
             }`}
           >
-            <GitCompare className="size-3.5" />
-            <span>Compare</span>
+            <GitCompare className="size-3.5 shrink-0" />
+            <span className="truncate">Compare</span>
           </button>
 
           <button
@@ -471,14 +479,14 @@ export function DocumentWorkspace({
             role="tab"
             aria-selected={workspaceMode === "actions"}
             onClick={() => setWorkspaceMode("actions")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 min-w-0 ${
               workspaceMode === "actions"
                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                 : "text-ink-secondary hover:text-ink-primary hover:bg-paper"
             }`}
           >
-            <Compass className="size-3.5" />
-            <span>Actions</span>
+            <Compass className="size-3.5 shrink-0" />
+            <span className="truncate">Actions</span>
           </button>
 
           <button
@@ -487,14 +495,14 @@ export function DocumentWorkspace({
             role="tab"
             aria-selected={workspaceMode === "prepare"}
             onClick={() => setWorkspaceMode("prepare")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 min-w-0 ${
               workspaceMode === "prepare"
                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                 : "text-ink-secondary hover:text-ink-primary hover:bg-paper"
             }`}
           >
-            <Briefcase className="size-3.5" />
-            <span>Prepare</span>
+            <Briefcase className="size-3.5 shrink-0" />
+            <span className="truncate">Prepare</span>
           </button>
 
           <button
@@ -503,14 +511,14 @@ export function DocumentWorkspace({
             role="tab"
             aria-selected={workspaceMode === "connect"}
             onClick={() => setWorkspaceMode("connect")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 min-w-0 ${
               workspaceMode === "connect"
                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                 : "text-ink-secondary hover:text-ink-primary hover:bg-paper"
             }`}
           >
-            <ArrowUpRight className="size-3.5" />
-            <span>Connect</span>
+            <ArrowUpRight className="size-3.5 shrink-0" />
+            <span className="truncate">Connect</span>
           </button>
         </div>
       </div>
@@ -549,6 +557,7 @@ export function DocumentWorkspace({
             comparisonResult={comparisonResult}
             comparisonDocB={comparisonDocB}
             actions={actions}
+            selectedFindingId={selectedPlannerFindingId}
             onActionsChange={setActions}
             onSelectEvidence={(params) => {
               if (params.document) {
@@ -569,6 +578,7 @@ export function DocumentWorkspace({
               }, 60)
             }}
             onActiveViewerDocChange={setActiveViewerDoc}
+            onNavigateToMode={(mode) => setWorkspaceMode(mode)}
           />
         )}
 
@@ -753,6 +763,7 @@ export function DocumentWorkspace({
                 activeEvidence={activeEvidence}
                 onSelectEvidence={handleSelectEvidence}
                 onReanalyze={handleStartAnalysis}
+                onPlanAction={handlePlanFindingAction}
               />
             )}
           </>
@@ -794,7 +805,7 @@ export function DocumentWorkspace({
 
         {/* Primary Document Title */}
         <div className="space-y-1 min-w-0">
-          <h1 className="font-serif text-lg sm:text-xl md:text-2xl font-bold text-ink-primary leading-snug wrap-break-word">
+          <h1 className="font-serif text-lg sm:text-xl md:text-2xl font-bold text-ink-primary leading-snug break-words">
             {documentTitle}
           </h1>
 

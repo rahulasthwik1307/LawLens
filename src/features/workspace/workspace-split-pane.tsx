@@ -44,7 +44,12 @@ export function WorkspaceSplitPane({
 
     const pointerOffset = e.clientX - rect.left
     const rawPercent = (pointerOffset / rect.width) * 100
-    const clampedPercent = Math.min(maxLeft, Math.max(minLeft, rawPercent))
+    // Enforce both percentage bounds AND a minimum usable pixel width (min 300px for both left and right panes)
+    const minPercentByPx = (300 / rect.width) * 100
+    const maxPercentByPx = ((rect.width - 300) / rect.width) * 100
+    const effectiveMin = Math.max(minLeft, Math.min(minPercentByPx, 48))
+    const effectiveMax = Math.min(maxLeft, Math.max(maxPercentByPx, 52))
+    const clampedPercent = Math.min(effectiveMax, Math.max(effectiveMin, rawPercent))
     setSplitPercent(Math.round(clampedPercent * 10) / 10)
   }
 
@@ -135,7 +140,7 @@ export function WorkspaceSplitPane({
       >
         {/* Left Pane: Original Document Reader */}
         <div
-          className={`h-full min-w-0 flex-col overflow-hidden w-full lg:w-(--split-left) ${
+          className={`h-full min-w-0 flex-col overflow-hidden w-full lg:w-(--split-left) @container/doc ${
             activeMobileTab === "document" ? "flex flex-1" : "hidden lg:flex"
           }`}
           data-pane="document"
@@ -158,6 +163,7 @@ export function WorkspaceSplitPane({
           onDoubleClick={handleDoubleClick}
           onKeyDown={handleKeyDown}
           title="Drag to resize panes · Double click to center"
+          style={{ touchAction: "none" }}
           className={`hidden lg:flex shrink-0 items-center justify-center w-2 -mx-1 cursor-col-resize relative z-20 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
             isDragging ? "bg-primary/20" : "hover:bg-primary/10"
           }`}
@@ -182,7 +188,7 @@ export function WorkspaceSplitPane({
 
         {/* Right Pane: AI Workspace */}
         <div
-          className={`h-full min-w-0 flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border/80 w-full lg:w-[calc(100%-var(--split-left))] ${
+          className={`h-full min-w-0 flex-col overflow-hidden border-t lg:border-t-0 lg:border-l border-border/80 w-full lg:w-[calc(100%-var(--split-left))] @container/ai ${
             activeMobileTab === "ai" ? "flex flex-1" : "hidden lg:flex"
           }`}
           data-pane="ai-workspace"

@@ -32,12 +32,15 @@ import type {
   DocumentComparisonResult,
 } from "@/services/ai/types"
 
+import { LegalActionPlannerPanel } from "./legal-action-planner-panel"
+
 interface ActionMapPanelProps {
   currentDocument: UploadedDocument
   analysisResult?: DocumentAnalysisResult | null
   comparisonResult?: DocumentComparisonResult | null
   comparisonDocB?: UploadedDocument | null
   actions?: ActionItem[]
+  selectedFindingId?: string
   onActionsChange?: (actions: ActionItem[]) => void
   onSelectEvidence: (params: {
     document?: UploadedDocument
@@ -46,6 +49,7 @@ interface ActionMapPanelProps {
     sourceText: string
   }) => void
   onActiveViewerDocChange?: (doc: UploadedDocument) => void
+  onNavigateToMode?: (mode: "findings" | "qa" | "compare" | "actions" | "prepare" | "connect") => void
 }
 
 type TypeFilter = "all" | ActionType | "attention"
@@ -97,9 +101,11 @@ export function ActionMapPanel({
   comparisonResult,
   comparisonDocB,
   actions: externalActions,
+  selectedFindingId: initialSelectedFindingId,
   onActionsChange,
   onSelectEvidence,
   onActiveViewerDocChange,
+  onNavigateToMode,
 }: ActionMapPanelProps) {
   const [internalActions, setInternalActions] = React.useState<ActionItem[]>([])
   const actions = externalActions !== undefined ? externalActions : internalActions
@@ -126,6 +132,22 @@ export function ActionMapPanel({
   const [typeFilter, setTypeFilter] = React.useState<TypeFilter>("all")
   const [statusFilter, setStatusFilter] = React.useState<"all" | "open" | "reviewed">("all")
   const [isGenerated, setIsGenerated] = React.useState(false)
+
+  // Sub-experience view switcher: "map" (overview) or "planner" (7-stage clause planner)
+  const [actionViewMode, setActionViewMode] = React.useState<"map" | "planner">(
+    initialSelectedFindingId ? "planner" : "map"
+  )
+  const [activePlannerFindingId, setActivePlannerFindingId] = React.useState<string | undefined>(
+    initialSelectedFindingId
+  )
+
+  // React to finding selection from Findings panel
+  React.useEffect(() => {
+    if (initialSelectedFindingId) {
+      setActivePlannerFindingId(initialSelectedFindingId)
+      setActionViewMode("planner")
+    }
+  }, [initialSelectedFindingId])
 
   // Truthful loading stages
   React.useEffect(() => {
@@ -263,15 +285,64 @@ export function ActionMapPanel({
 
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
-      {/* Editorial Header */}
-      <div className="rounded-xl border border-border/80 bg-card p-4 md:p-5 space-y-3 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Compass className="size-4 text-primary shrink-0" />
-              <h3 className="font-serif text-base font-bold text-ink-primary">
-                Clause-to-Action Map
-              </h3>
+      {/* Top Experience Selector: Map vs Planner */}
+      <div className="flex items-center justify-between gap-3 flex-wrap bg-card border border-border/80 p-2 rounded-xl shadow-2xs">
+        <div className="flex items-center gap-1 bg-paper p-1 rounded-lg border border-border/70">
+          <button
+            type="button"
+            id="view-tab-action-map"
+            onClick={() => setActionViewMode("map")}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+              actionViewMode === "map"
+                ? "bg-card text-ink-primary font-semibold shadow-2xs border border-border/60"
+                : "text-ink-muted hover:text-ink-primary"
+            }`}
+          >
+            Clause Action Map
+          </button>
+          <button
+            type="button"
+            id="view-tab-action-planner"
+            onClick={() => setActionViewMode("planner")}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
+              actionViewMode === "planner"
+                ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
+                : "text-ink-muted hover:text-ink-primary"
+            }`}
+          >
+            <Sparkles className="size-3" />
+            <span>Legal Action Planner</span>
+          </button>
+        </div>
+
+        <div className="text-[11px] text-ink-muted px-2 hidden sm:block">
+          {actionViewMode === "planner"
+            ? "7-step clause-grounded pathway"
+            : "Contract-wide action matrix"}
+        </div>
+      </div>
+
+      {actionViewMode === "planner" ? (
+        <LegalActionPlannerPanel
+          currentDocument={currentDocument}
+          analysisResult={analysisResult}
+          actions={actions}
+          selectedFindingId={activePlannerFindingId}
+          onActionsChange={setActions}
+          onSelectEvidence={onSelectEvidence}
+          onNavigateToMode={onNavigateToMode}
+        />
+      ) : (
+        <>
+          {/* Editorial Header */}
+          <div className="rounded-xl border border-border/80 bg-card p-4 md:p-5 space-y-3 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Compass className="size-4 text-primary shrink-0" />
+                  <h3 className="font-serif text-base font-bold text-ink-primary">
+                    Clause-to-Action Map
+                  </h3>
               {isGenerated && totalCount > 0 && (
                 <Badge
                   variant={attentionCount > 0 ? "attention" : "outline"}
@@ -429,12 +500,12 @@ export function ActionMapPanel({
         {isGenerated && !loading && actions.length > 0 && (
           <div className="space-y-3 pt-1">
             {/* Filter Pills */}
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-1 overflow-x-auto pb-1 max-w-full">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs min-w-0">
+              <div className="flex flex-wrap items-center gap-1 min-w-0">
                 <button
                   type="button"
                   onClick={() => setTypeFilter("all")}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 ${
                     typeFilter === "all"
                       ? "bg-primary text-primary-foreground font-semibold"
                       : "bg-paper text-ink-secondary hover:text-ink-primary border border-border/60"
@@ -447,7 +518,7 @@ export function ActionMapPanel({
                   <button
                     type="button"
                     onClick={() => setTypeFilter("attention")}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1 ${
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1 whitespace-nowrap shrink-0 ${
                       typeFilter === "attention"
                         ? "bg-amber-600 text-white font-semibold"
                         : "bg-amber-500/10 text-amber-900 dark:text-amber-300 border border-amber-500/30"
@@ -467,7 +538,7 @@ export function ActionMapPanel({
                       key={type}
                       type="button"
                       onClick={() => setTypeFilter(type)}
-                      className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                      className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 ${
                         typeFilter === type
                           ? "bg-primary text-primary-foreground font-semibold"
                           : "bg-paper text-ink-secondary hover:text-ink-primary border border-border/60"
@@ -480,11 +551,11 @@ export function ActionMapPanel({
               </div>
 
               {/* Status toggles */}
-              <div className="flex items-center gap-1 text-[11px] bg-paper p-0.5 rounded-md border border-border/60">
+              <div className="flex items-center gap-1 text-[11px] bg-paper p-0.5 rounded-md border border-border/60 shrink-0">
                 <button
                   type="button"
                   onClick={() => setStatusFilter("all")}
-                  className={`px-2 py-0.5 rounded transition-colors ${
+                  className={`px-2 py-0.5 rounded transition-colors whitespace-nowrap ${
                     statusFilter === "all"
                       ? "bg-card text-ink-primary font-medium shadow-2xs"
                       : "text-ink-muted hover:text-ink-secondary"
@@ -495,7 +566,7 @@ export function ActionMapPanel({
                 <button
                   type="button"
                   onClick={() => setStatusFilter("open")}
-                  className={`px-2 py-0.5 rounded transition-colors ${
+                  className={`px-2 py-0.5 rounded transition-colors whitespace-nowrap ${
                     statusFilter === "open"
                       ? "bg-card text-ink-primary font-medium shadow-2xs"
                       : "text-ink-muted hover:text-ink-secondary"
@@ -506,7 +577,7 @@ export function ActionMapPanel({
                 <button
                   type="button"
                   onClick={() => setStatusFilter("reviewed")}
-                  className={`px-2 py-0.5 rounded transition-colors ${
+                  className={`px-2 py-0.5 rounded transition-colors whitespace-nowrap ${
                     statusFilter === "reviewed"
                       ? "bg-card text-ink-primary font-medium shadow-2xs"
                       : "text-ink-muted hover:text-ink-secondary"
@@ -708,25 +779,25 @@ export function ActionMapPanel({
                     </div>
 
                     {/* Navigation Buttons */}
-                    <div className="pt-1 flex items-center gap-2 flex-wrap">
+                    <div className="pt-1 flex items-center gap-2 flex-wrap min-w-0">
                       {isComparison && hasMultipleEvidence ? (
                         <>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewSource(action, "A")}
-                            className="gap-1 text-[11px] h-7"
+                            className="gap-1 text-[11px] h-7 whitespace-nowrap shrink-0"
                           >
-                            <ExternalLink className="size-3 text-primary" />
+                            <ExternalLink className="size-3 text-primary shrink-0" />
                             <span>View in Doc A</span>
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewSource(action, "B")}
-                            className="gap-1 text-[11px] h-7"
+                            className="gap-1 text-[11px] h-7 whitespace-nowrap shrink-0"
                           >
-                            <ExternalLink className="size-3 text-primary" />
+                            <ExternalLink className="size-3 text-primary shrink-0" />
                             <span>View in Doc B</span>
                           </Button>
                         </>
@@ -735,10 +806,26 @@ export function ActionMapPanel({
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewSource(action)}
-                          className="gap-1 text-[11px] h-7"
+                          className="gap-1 text-[11px] h-7 whitespace-nowrap shrink-0"
                         >
-                          <ExternalLink className="size-3 text-primary" />
+                          <ExternalLink className="size-3 text-primary shrink-0" />
                           <span>View in Document</span>
+                        </Button>
+                      )}
+
+                      {action.relatedFindingId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setActivePlannerFindingId(action.relatedFindingId)
+                            setActionViewMode("planner")
+                          }}
+                          className="gap-1 text-[11px] h-7 text-primary hover:text-primary whitespace-nowrap shrink-0"
+                          title="Open 7-step Legal Action Planner for this clause"
+                        >
+                          <Sparkles className="size-3 shrink-0" />
+                          <span>Action Plan</span>
                         </Button>
                       )}
                     </div>
@@ -755,6 +842,8 @@ export function ActionMapPanel({
         LawLens provides legal information and navigation assistance, not legal advice.
         Status checkboxes are personal workspace markers and do not execute or satisfy legal obligations.
       </div>
+        </>
+      )}
     </div>
   )
 }

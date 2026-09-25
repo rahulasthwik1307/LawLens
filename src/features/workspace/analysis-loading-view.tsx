@@ -72,31 +72,31 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
     <div
       role="status"
       aria-live="polite"
-      className="rounded-xl border border-border/80 bg-card p-6 md:p-8 space-y-6 shadow-xs animate-in fade-in duration-200"
+      className="rounded-xl border border-border/80 bg-card p-5 @[540px]/ai:p-8 space-y-6 shadow-xs animate-in fade-in duration-200 min-w-0"
     >
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-border/60">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-border/60 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
             <Loader2 className="size-5 animate-spin motion-reduce:animate-none" />
           </div>
-          <div>
-            <h3 className="font-serif text-lg font-bold text-ink-primary">
+          <div className="min-w-0">
+            <h3 className="font-serif text-lg font-bold text-ink-primary break-words">
               Analyzing Document
             </h3>
-            <p className="text-xs text-ink-secondary">
+            <p className="text-xs text-ink-secondary break-words">
               Extracting evidence-grounded provisions from &ldquo;{documentName}&rdquo;
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] font-mono text-ink-muted bg-paper px-2.5 py-1 rounded border border-border/70">
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-ink-muted bg-paper px-2.5 py-1 rounded border border-border/70 shrink-0">
           <Scale className="size-3 text-primary" />
           <span>India Context</span>
         </div>
       </div>
 
       {/* Progress Stages */}
-      <div className="space-y-4">
+      <div className="space-y-4 min-w-0">
         {ANALYSIS_STAGES.map((stage, idx) => {
           const isFinished = idx < currentStageIndex
           const isCurrent = idx === currentStageIndex
@@ -105,7 +105,7 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
           return (
             <div
               key={stage.id}
-              className={`flex items-start gap-3 transition-opacity duration-300 ${
+              className={`flex items-start gap-3 transition-opacity duration-300 min-w-0 ${
                 isPending ? "opacity-35" : "opacity-100"
               }`}
             >
@@ -118,9 +118,9 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
                   <div className="size-4 rounded-full border border-border/80 bg-paper" />
                 )}
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 min-w-0 flex-1">
                 <p
-                  className={`text-xs font-semibold ${
+                  className={`text-xs font-semibold break-words ${
                     isCurrent
                       ? "text-primary"
                       : isFinished
@@ -130,7 +130,7 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
                 >
                   {stage.title}
                 </p>
-                <p className="text-[11px] text-ink-muted leading-relaxed">
+                <p className="text-[11px] text-ink-muted leading-relaxed break-words">
                   {stage.detail}
                 </p>
               </div>
@@ -140,9 +140,9 @@ export function AnalysisLoadingView({ documentName }: AnalysisLoadingViewProps) 
       </div>
 
       {/* Reassurance Notice */}
-      <div className="pt-2 border-t border-border/50 text-[11px] text-ink-muted flex items-center gap-2">
+      <div className="pt-2 border-t border-border/50 text-[11px] text-ink-muted flex items-center gap-2 min-w-0">
         <ShieldCheck className="size-3.5 text-emerald-600 shrink-0" />
-        <span>Original document remains read-only and isolated.</span>
+        <span className="break-words">Original document remains read-only and isolated.</span>
       </div>
     </div>
   )

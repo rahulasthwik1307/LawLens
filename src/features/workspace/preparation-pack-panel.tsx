@@ -260,19 +260,19 @@ export function PreparationPackPanel({
             <h2 className="font-serif text-lg md:text-xl font-bold text-ink-primary tracking-tight print:text-2xl">
               Professional Consultation Briefing
             </h2>
-            <p className="text-xs text-ink-secondary leading-relaxed wrap-break-word">
+            <p className="text-xs text-ink-secondary leading-relaxed break-words">
               Consolidated from verified legal findings, contractual obligations, and action items in{" "}
               <strong className="text-ink-primary font-medium">{pack.overview.documentName}</strong>.
             </p>
           </div>
 
           {/* Action buttons cleanly wrapped inside container */}
-          <div className="flex flex-wrap items-center gap-2 pt-1 print:hidden">
+          <div className="flex flex-wrap items-center gap-2 pt-1 print:hidden min-w-0">
             <Button
               variant="outline"
               size="sm"
               onClick={handleCopyBriefing}
-              className="gap-1.5 text-xs text-ink-secondary hover:text-ink-primary h-8"
+              className="gap-1.5 text-xs text-ink-secondary hover:text-ink-primary h-8 whitespace-nowrap shrink-0"
               id="btn-copy-briefing"
             >
               {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
@@ -282,7 +282,7 @@ export function PreparationPackPanel({
               variant="default"
               size="sm"
               onClick={handlePrint}
-              className="gap-1.5 text-xs font-semibold h-8 shadow-xs"
+              className="gap-1.5 text-xs font-semibold h-8 shadow-xs whitespace-nowrap shrink-0"
               id="btn-print-pack"
             >
               <Printer className="size-3.5" />
@@ -291,8 +291,8 @@ export function PreparationPackPanel({
           </div>
         </div>
 
-        {/* Document Overview Metadata Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 pt-1 text-xs">
+        {/* Document Overview Metadata Grid: container-responsive */}
+        <div className="grid grid-cols-2 @[540px]/ai:grid-cols-4 gap-2.5 pt-1 text-xs min-w-0">
           <div className="rounded-lg bg-paper-contrast/40 p-2.5 border border-border/50 min-w-0">
             <span className="font-mono uppercase tracking-wider text-[10px] text-ink-muted block truncate">Document Type</span>
             <span className="font-medium text-ink-primary truncate block mt-0.5">{pack.overview.documentType || "Agreement"}</span>

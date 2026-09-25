@@ -149,10 +149,10 @@ export function ConnectPanel({
   const legalAidResources = resolution.resources.filter((r) => r.category === "legal_aid")
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 min-w-0">
       {/* Header Banner */}
-      <div className="rounded-xl border border-border/80 bg-card p-6 md:p-7 shadow-xs space-y-3">
-        <div className="flex items-center gap-2">
+      <div className="rounded-xl border border-border/80 bg-card p-5 @[540px]/ai:p-6 shadow-xs space-y-3 min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-primary font-semibold px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
             Next Steps · Connect
           </span>
@@ -161,10 +161,10 @@ export function ConnectPanel({
           </span>
         </div>
 
-        <h2 className="font-serif text-xl md:text-2xl font-bold text-ink-primary tracking-tight">
+        <h2 className="font-serif text-xl md:text-2xl font-bold text-ink-primary tracking-tight break-words">
           Where to Go Next
         </h2>
-        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed max-w-2xl">
+        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed max-w-2xl break-words">
           You have reviewed, verified, and organized the evidence in{" "}
           <strong className="text-ink-primary font-medium">{document.name}</strong>.
           Use this guide to access verified statutory portals, explore official legal aid channels, or prepare for consultation with a qualified legal professional.
@@ -175,20 +175,20 @@ export function ConnectPanel({
       {!resolution.isSupported && (
         <div
           role="alert"
-          className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 text-xs text-amber-950 dark:text-amber-200 space-y-3"
+          className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 text-xs text-amber-950 dark:text-amber-200 space-y-3 min-w-0"
         >
           <div className="flex items-start gap-3">
             <AlertCircle className="size-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <h4 className="font-semibold text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300">
                 Jurisdiction Limitation Notice
               </h4>
-              <p className="leading-relaxed text-ink-secondary text-xs">
+              <p className="leading-relaxed text-ink-secondary text-xs break-words">
                 {resolution.limitationMessage}
               </p>
             </div>
           </div>
-          <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between">
+          <div className="pt-2 border-t border-amber-500/20 flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] text-ink-muted">
               You can still carry your verified Preparation Pack to a local practitioner.
             </span>
@@ -196,7 +196,7 @@ export function ConnectPanel({
               variant="outline"
               size="sm"
               onClick={() => onNavigateToMode("prepare")}
-              className="gap-1.5 text-xs h-7"
+              className="gap-1.5 text-xs h-7 whitespace-nowrap shrink-0"
             >
               <span>Open Preparation Pack</span>
               <ArrowRight className="size-3" />
@@ -206,20 +206,20 @@ export function ConnectPanel({
       )}
 
       {/* SECTION 1: Preparation Pack Handoff (Take this with you) */}
-      <div className="rounded-xl border border-border/80 bg-card p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
-          <div className="flex items-center gap-2">
-            <Briefcase className="size-4 text-primary" />
-            <h3 className="font-serif font-bold text-sm md:text-base text-ink-primary">
+      <div className="rounded-xl border border-border/80 bg-card p-5 @[540px]/ai:p-6 shadow-xs space-y-4 min-w-0">
+        <div className="flex flex-col @[540px]/ai:flex-row @[540px]/ai:items-center justify-between gap-3 border-b border-border/60 pb-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <Briefcase className="size-4 text-primary shrink-0" />
+            <h3 className="font-serif font-bold text-sm md:text-base text-ink-primary truncate">
               Questions & Findings to Take With You
             </h3>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             <Button
               variant="outline"
               size="sm"
               onClick={handleCopyBriefing}
-              className="gap-1.5 text-xs text-ink-secondary hover:text-ink-primary h-7"
+              className="gap-1.5 text-xs text-ink-secondary hover:text-ink-primary h-7 whitespace-nowrap shrink-0"
               id="btn-copy-briefing-connect"
             >
               {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
@@ -229,7 +229,7 @@ export function ConnectPanel({
               variant="default"
               size="sm"
               onClick={() => onNavigateToMode("prepare")}
-              className="gap-1.5 text-xs font-semibold h-7 shadow-xs"
+              className="gap-1.5 text-xs font-semibold h-7 shadow-xs whitespace-nowrap shrink-0"
               id="btn-open-prep-pack"
             >
               <span>Open Preparation Pack</span>
@@ -243,7 +243,7 @@ export function ConnectPanel({
             Generate Findings or the Action Map to populate specific consultation inquiry points.
           </p>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2.5 min-w-0">
             <span className="text-[11px] text-ink-muted uppercase tracking-wider font-mono">
               Key consultation points derived from verified document clauses:
             </span>
@@ -251,15 +251,15 @@ export function ConnectPanel({
               {takeWithYouItems.map((item, idx) => (
                 <li
                   key={idx}
-                  className="rounded-lg border border-border/60 bg-paper/50 p-3 text-xs space-y-0.5"
+                  className="rounded-lg border border-border/60 bg-paper/50 p-3 text-xs space-y-0.5 min-w-0"
                 >
                   <div className="flex items-start gap-2">
                     <div className="size-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
-                    <div>
-                      <span className="font-semibold text-ink-primary text-xs block">
+                    <div className="min-w-0">
+                      <span className="font-semibold text-ink-primary text-xs block break-words">
                         {item.title}
                       </span>
-                      <span className="text-[11px] text-ink-secondary leading-relaxed block">
+                      <span className="text-[11px] text-ink-secondary leading-relaxed block break-words">
                         {item.hint}
                       </span>
                     </div>
@@ -273,9 +273,9 @@ export function ConnectPanel({
 
       {/* SECTION 2: Official Statutory & Judicial Portals */}
       {resolution.isSupported && officialResources.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-border/60 pb-2">
-            <div>
+        <div className="space-y-4 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2 min-w-0">
+            <div className="min-w-0">
               <h3 className="font-serif font-bold text-sm md:text-base text-ink-primary">
                 Authoritative Legal Information Portals
               </h3>
@@ -283,57 +283,57 @@ export function ConnectPanel({
                 Official government repositories and judicial portals for statutory research and filings.
               </p>
             </div>
-            <Badge variant="outline" size="sm" className="font-mono text-[10px]">
+            <Badge variant="outline" size="sm" className="font-mono text-[10px] shrink-0">
               {officialResources.length} official portals
             </Badge>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 @[540px]/ai:grid-cols-2 gap-3.5 min-w-0">
             {officialResources.map((res) => (
               <div
                 key={res.id}
-                className="rounded-xl border border-border/80 bg-card p-4 space-y-3 flex flex-col justify-between hover:border-border transition-colors shadow-xs"
+                className="rounded-xl border border-border/80 bg-card p-4 space-y-3 flex flex-col justify-between hover:border-border transition-colors shadow-xs min-w-0"
               >
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-mono text-[10px] font-semibold text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20 uppercase">
+                    <span className="font-mono text-[10px] font-semibold text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20 uppercase shrink-0">
                       {res.sourceType.replace(/_/g, " ")}
                     </span>
-                    <span className="font-mono text-[10px] text-ink-muted">
+                    <span className="font-mono text-[10px] text-ink-muted shrink-0">
                       {res.lastVerified}
                     </span>
                   </div>
 
-                  <div>
-                    <h4 className="font-semibold text-xs md:text-sm text-ink-primary">
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-xs md:text-sm text-ink-primary break-words">
                       {res.title}
                     </h4>
-                    <span className="text-[11px] text-ink-muted block mt-0.5">
+                    <span className="text-[11px] text-ink-muted block mt-0.5 break-words">
                       {res.organization}
                     </span>
                   </div>
 
-                  <p className="text-xs text-ink-secondary leading-relaxed">
+                  <p className="text-xs text-ink-secondary leading-relaxed break-words">
                     {res.description}
                   </p>
 
                   {res.relevanceHint && (
-                    <p className="text-[11px] text-ink-muted bg-paper-contrast/50 p-2 rounded border border-border/40">
+                    <p className="text-[11px] text-ink-muted bg-paper-contrast/50 p-2 rounded border border-border/40 break-words">
                       <strong className="text-ink-primary font-medium">Use for:</strong> {res.relevanceHint}
                     </p>
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                <div className="pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[10px] text-emerald-800 dark:text-emerald-400 font-mono flex items-center gap-1">
-                    <span className="size-1.5 rounded-full bg-emerald-600 inline-block" />
+                    <span className="size-1.5 rounded-full bg-emerald-600 inline-block shrink-0" />
                     Verified Official Domain
                   </span>
                   <a
                     href={res.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline whitespace-nowrap shrink-0"
                     aria-label={`Open ${res.title} in a new tab`}
                   >
                     <span>Open official source</span>
@@ -348,8 +348,8 @@ export function ConnectPanel({
 
       {/* SECTION 3: Official Legal Aid Authority */}
       {resolution.isSupported && legalAidResources.length > 0 && (
-        <div className="space-y-4">
-          <div className="border-b border-border/60 pb-2">
+        <div className="space-y-4 min-w-0">
+          <div className="border-b border-border/60 pb-2 min-w-0">
             <h3 className="font-serif font-bold text-sm md:text-base text-ink-primary">
               Official Legal Aid & Public Assistance Channels
             </h3>
@@ -358,21 +358,21 @@ export function ConnectPanel({
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 min-w-0">
             {legalAidResources.map((res) => (
               <div
                 key={res.id}
-                className="rounded-xl border border-primary/20 bg-primary/5 p-5 space-y-3 shadow-xs"
+                className="rounded-xl border border-primary/20 bg-primary/5 p-4 @[540px]/ai:p-5 space-y-3 shadow-xs min-w-0"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-primary/10 pb-3">
-                  <div>
+                <div className="flex flex-col @[540px]/ai:flex-row @[540px]/ai:items-center justify-between gap-2 border-b border-primary/10 pb-3 min-w-0">
+                  <div className="min-w-0">
                     <span className="font-mono text-[10px] font-semibold text-primary uppercase tracking-wider block">
                       Statutory Legal Services
                     </span>
-                    <h4 className="font-serif font-bold text-sm md:text-base text-ink-primary mt-0.5">
+                    <h4 className="font-serif font-bold text-sm md:text-base text-ink-primary mt-0.5 break-words">
                       {res.title}
                     </h4>
-                    <span className="text-[11px] text-ink-muted block mt-0.5">
+                    <span className="text-[11px] text-ink-muted block mt-0.5 break-words">
                       {res.organization}
                     </span>
                   </div>
@@ -381,20 +381,20 @@ export function ConnectPanel({
                   </span>
                 </div>
 
-                <p className="text-xs text-ink-secondary leading-relaxed">
+                <p className="text-xs text-ink-secondary leading-relaxed break-words">
                   {res.description}
                 </p>
 
-                <div className="rounded-lg bg-card/80 p-3 border border-border/50 text-[11px] text-ink-secondary space-y-1">
+                <div className="rounded-lg bg-card/80 p-3 border border-border/50 text-[11px] text-ink-secondary space-y-1 min-w-0">
                   <strong className="text-ink-primary font-medium block">
                     Statutory Eligibility (Section 12 of the Legal Services Authorities Act, 1987):
                   </strong>
-                  <p className="leading-relaxed">
+                  <p className="leading-relaxed break-words">
                     Free legal aid is available to women, children, members of SC/ST communities, industrial workmen, persons with disabilities, custody inmates, and persons whose annual income falls below statutory income ceilings set by individual States.
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 min-w-0">
                   <span className="text-[11px] text-ink-muted font-mono">
                     Official Central Portal: nalsa.gov.in
                   </span>
@@ -402,7 +402,7 @@ export function ConnectPanel({
                     href={res.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline whitespace-nowrap shrink-0"
                     aria-label={`Open ${res.title} in a new tab`}
                   >
                     <span>Visit NALSA Portal</span>
@@ -416,8 +416,8 @@ export function ConnectPanel({
       )}
 
       {/* SECTION 4: Professional Review Boundary & Checklist */}
-      <div className="rounded-xl border border-border/80 bg-card p-6 shadow-xs space-y-4">
-        <div className="space-y-1 border-b border-border/60 pb-3">
+      <div className="rounded-xl border border-border/80 bg-card p-5 @[540px]/ai:p-6 shadow-xs space-y-4 min-w-0">
+        <div className="space-y-1 border-b border-border/60 pb-3 min-w-0">
           <span className="font-mono text-[10px] uppercase tracking-wider text-ink-muted font-semibold">
             Product Boundary & Consultation Guide
           </span>
@@ -426,12 +426,12 @@ export function ConnectPanel({
           </h3>
         </div>
 
-        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed">
+        <p className="text-xs md:text-sm text-ink-secondary leading-relaxed break-words">
           LawLens is a legal document comprehension and evidence-grounding platform. It does not provide legal advice, draft enforceable filings, predict dispute outcomes, or act as an advocate.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-          <div className="rounded-lg bg-paper-contrast/40 p-3.5 border border-border/50 space-y-1.5">
+        <div className="grid grid-cols-1 @[540px]/ai:grid-cols-2 gap-3 text-xs min-w-0">
+          <div className="rounded-lg bg-paper-contrast/40 p-3.5 border border-border/50 space-y-1.5 min-w-0">
             <span className="font-semibold text-ink-primary text-xs block">
               Situations Warranting Legal Counsel
             </span>
@@ -443,7 +443,7 @@ export function ConnectPanel({
             </ul>
           </div>
 
-          <div className="rounded-lg bg-paper-contrast/40 p-3.5 border border-border/50 space-y-1.5">
+          <div className="rounded-lg bg-paper-contrast/40 p-3.5 border border-border/50 space-y-1.5 min-w-0">
             <span className="font-semibold text-ink-primary text-xs block">
               What to Bring to Your Consultation
             </span>
@@ -456,7 +456,7 @@ export function ConnectPanel({
           </div>
         </div>
 
-        <div className="pt-2 border-t border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="pt-2 border-t border-border/50 flex flex-col @[540px]/ai:flex-row @[540px]/ai:items-center justify-between gap-3 text-xs min-w-0">
           <span className="text-[11px] text-ink-muted">
             Independent counsel provides advice tailored to your personal and jurisdictional circumstances.
           </span>
@@ -464,7 +464,7 @@ export function ConnectPanel({
             variant="outline"
             size="sm"
             onClick={() => onNavigateToMode("prepare")}
-            className="gap-1.5 text-xs h-7 shrink-0 font-medium"
+            className="gap-1.5 text-xs h-7 shrink-0 font-medium whitespace-nowrap"
           >
             <span>Review Full Preparation Pack</span>
             <ArrowRight className="size-3" />

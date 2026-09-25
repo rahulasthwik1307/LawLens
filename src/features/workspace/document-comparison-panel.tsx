@@ -318,40 +318,40 @@ export function DocumentComparisonPanel({
             )}
 
             {/* Metric Counters */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 text-center">
-              <div className="p-2.5 rounded-lg border border-border/60 bg-paper-contrast/20">
+            <div className="grid grid-cols-2 @[500px]/ai:grid-cols-4 gap-2.5 pt-2 text-center min-w-0">
+              <div className="p-2.5 rounded-lg border border-border/60 bg-paper-contrast/20 min-w-0">
                 <div className="text-lg font-bold text-ink-primary">
                   {comparisonResult.stats.totalDifferences}
                 </div>
-                <div className="text-[10px] text-ink-secondary font-medium">
+                <div className="text-[10px] text-ink-secondary font-medium truncate">
                   Total Differences
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg border border-border/60 bg-paper-contrast/20">
+              <div className="p-2.5 rounded-lg border border-border/60 bg-paper-contrast/20 min-w-0">
                 <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
                   {comparisonResult.stats.reviewRecommendedCount}
                 </div>
-                <div className="text-[10px] text-ink-secondary font-medium">
+                <div className="text-[10px] text-ink-secondary font-medium truncate">
                   Review Recommended
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg border border-border/60 bg-paper-contrast/20">
+              <div className="p-2.5 rounded-lg border border-border/60 bg-paper-contrast/20 min-w-0">
                 <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                   {comparisonResult.stats.addedCount + comparisonResult.stats.valueChangedCount}
                 </div>
-                <div className="text-[10px] text-ink-secondary font-medium">
+                <div className="text-[10px] text-ink-secondary font-medium truncate">
                   Added / Values Shifted
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg border border-border/60 bg-paper-contrast/20">
+              <div className="p-2.5 rounded-lg border border-border/60 bg-paper-contrast/20 min-w-0">
                 <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
-                  <ShieldCheck className="size-4" />
+                  <ShieldCheck className="size-4 shrink-0" />
                   <span>{comparisonResult.stats.verifiedEvidenceItems}</span>
                 </div>
-                <div className="text-[10px] text-ink-secondary font-medium">
+                <div className="text-[10px] text-ink-secondary font-medium truncate">
                   Verified Citations
                 </div>
               </div>
@@ -583,17 +583,17 @@ function DifferenceCard({
         </div>
       )}
 
-      {/* Evidence Side-by-Side Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+      {/* Evidence Side-by-Side Comparison: Responsive to AI container width */}
+      <div className="grid grid-cols-1 @[540px]/ai:grid-cols-2 gap-3 pt-2 min-w-0">
         {/* Document A Evidence */}
-        <div className="rounded-lg border border-border/60 bg-paper-contrast/20 p-3 space-y-2">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="font-semibold text-ink-secondary flex items-center gap-1">
-              <span className="size-1.5 rounded-full bg-blue-500" />
-              Document A
+        <div className="rounded-lg border border-border/60 bg-paper-contrast/20 p-3 space-y-2 min-w-0">
+          <div className="flex items-center justify-between text-[11px] min-w-0">
+            <span className="font-semibold text-ink-secondary flex items-center gap-1 truncate">
+              <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />
+              <span>Document A</span>
             </span>
             {diff.evidenceA.length > 0 && (
-              <span className="font-mono text-[10px] text-ink-muted">
+              <span className="font-mono text-[10px] text-ink-muted whitespace-nowrap shrink-0">
                 L{diff.evidenceA[0].startLine}–L{diff.evidenceA[0].endLine}
               </span>
             )}
@@ -601,15 +601,15 @@ function DifferenceCard({
 
           {diff.evidenceA.length > 0 ? (
             diff.evidenceA.map((ev, i) => (
-              <div key={i} className="space-y-2">
-                <blockquote className="text-[11px] font-serif italic text-ink-primary border-l-2 border-blue-500/50 pl-2.5 py-0.5">
+              <div key={i} className="space-y-2 min-w-0">
+                <blockquote className="text-[11px] font-serif italic text-ink-primary border-l-2 border-blue-500/50 pl-2.5 py-0.5 break-words">
                   &ldquo;{ev.sourceText}&rdquo;
                 </blockquote>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 min-w-0">
                   <Badge
                     variant={ev.verificationStatus === "verified" ? "default" : "outline"}
                     size="sm"
-                    className="font-mono text-[9px]"
+                    className="font-mono text-[9px] whitespace-nowrap shrink-0"
                   >
                     {ev.verificationStatus === "verified" ? "Verified Grounding" : "Unverified Quote"}
                   </Badge>
@@ -625,30 +625,30 @@ function DifferenceCard({
                         sourceText: ev.sourceText,
                       })
                     }
-                    className="text-[10px] h-6 px-2 flex items-center gap-1 text-ink-secondary hover:text-ink-primary"
+                    className="text-[10px] h-6 px-2 flex items-center gap-1 text-ink-secondary hover:text-ink-primary whitespace-nowrap shrink-0"
                   >
-                    <Eye className="size-3" />
+                    <Eye className="size-3 shrink-0" />
                     <span>View in Doc A</span>
                   </Button>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-ink-muted italic py-1">
+            <p className="text-[11px] text-ink-muted italic py-1 break-words">
               Provision not present in Document A (introduced in Document B).
             </p>
           )}
         </div>
 
         {/* Document B Evidence */}
-        <div className="rounded-lg border border-border/60 bg-paper-contrast/20 p-3 space-y-2">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="font-semibold text-ink-secondary flex items-center gap-1">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
-              Document B
+        <div className="rounded-lg border border-border/60 bg-paper-contrast/20 p-3 space-y-2 min-w-0">
+          <div className="flex items-center justify-between text-[11px] min-w-0">
+            <span className="font-semibold text-ink-secondary flex items-center gap-1 truncate">
+              <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
+              <span>Document B</span>
             </span>
             {diff.evidenceB.length > 0 && (
-              <span className="font-mono text-[10px] text-ink-muted">
+              <span className="font-mono text-[10px] text-ink-muted whitespace-nowrap shrink-0">
                 L{diff.evidenceB[0].startLine}–L{diff.evidenceB[0].endLine}
               </span>
             )}
@@ -656,15 +656,15 @@ function DifferenceCard({
 
           {diff.evidenceB.length > 0 ? (
             diff.evidenceB.map((ev, i) => (
-              <div key={i} className="space-y-2">
-                <blockquote className="text-[11px] font-serif italic text-ink-primary border-l-2 border-emerald-500/50 pl-2.5 py-0.5">
+              <div key={i} className="space-y-2 min-w-0">
+                <blockquote className="text-[11px] font-serif italic text-ink-primary border-l-2 border-emerald-500/50 pl-2.5 py-0.5 break-words">
                   &ldquo;{ev.sourceText}&rdquo;
                 </blockquote>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 min-w-0">
                   <Badge
                     variant={ev.verificationStatus === "verified" ? "default" : "outline"}
                     size="sm"
-                    className="font-mono text-[9px]"
+                    className="font-mono text-[9px] whitespace-nowrap shrink-0"
                   >
                     {ev.verificationStatus === "verified" ? "Verified Grounding" : "Unverified Quote"}
                   </Badge>
@@ -680,16 +680,16 @@ function DifferenceCard({
                         sourceText: ev.sourceText,
                       })
                     }
-                    className="text-[10px] h-6 px-2 flex items-center gap-1 text-ink-secondary hover:text-ink-primary"
+                    className="text-[10px] h-6 px-2 flex items-center gap-1 text-ink-secondary hover:text-ink-primary whitespace-nowrap shrink-0"
                   >
-                    <Eye className="size-3" />
+                    <Eye className="size-3 shrink-0" />
                     <span>View in Doc B</span>
                   </Button>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-ink-muted italic py-1">
+            <p className="text-[11px] text-ink-muted italic py-1 break-words">
               Provision omitted in Document B (present only in Document A).
             </p>
           )}
