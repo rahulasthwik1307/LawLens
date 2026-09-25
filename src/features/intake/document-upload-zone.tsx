@@ -26,12 +26,14 @@ import { UploadedDocument, ValidationError } from "@/types/document"
 
 interface DocumentUploadZoneProps {
   onDocumentReady: (doc: UploadedDocument) => void
-  onProcessingStart: () => void
+  onProcessingStart: (prelimDoc?: UploadedDocument) => void
+  onProcessingError?: () => void
 }
 
 export function DocumentUploadZone({
   onDocumentReady,
   onProcessingStart,
+  onProcessingError,
 }: DocumentUploadZoneProps) {
   const [isDragging, setIsDragging] = React.useState(false)
   const [validationError, setValidationError] = React.useState<ValidationError | null>(null)
@@ -49,14 +51,30 @@ export function DocumentUploadZone({
       return
     }
 
-    // Trigger intentional processing state
-    onProcessingStart()
+    const extension = "." + (file.name.split(".").pop()?.toLowerCase() || "")
+    const prelimDoc: UploadedDocument = {
+      id: "doc_pending",
+      name: file.name,
+      size: file.size,
+      type: file.type || "application/octet-stream",
+      extension,
+      content: "",
+      isTextReadable: false,
+      lineCount: 0,
+      wordCount: 0,
+      uploadedAt: new Date(),
+      jurisdiction: "India",
+    }
+
+    // Trigger intentional processing state with preliminary file details
+    onProcessingStart(prelimDoc)
 
     // Process file
     const result = await processLocalFile(file, "India")
     if (result.isValid && result.document) {
       onDocumentReady(result.document)
     } else if (result.error) {
+      onProcessingError?.()
       setValidationError(result.error)
     }
   }

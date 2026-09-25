@@ -9,7 +9,11 @@ import type {
 
 export const RawDifferenceEvidenceSchema = z.object({
   document: z.enum(["A", "B"]),
-  quote: z.string().default(""),
+  quote: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? ""),
   startLine: z
     .coerce
     .number()

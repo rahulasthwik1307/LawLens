@@ -7,9 +7,14 @@ import type {
 } from "./types.ts"
 
 export const RawActionItemInputSchema = z.object({
-  candidateId: z.string().optional(),
+  candidateId: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined),
   type: z
     .string()
+    .nullable()
     .optional()
     .transform((val): ActionType => {
       if (!val) return "review"
@@ -22,6 +27,7 @@ export const RawActionItemInputSchema = z.object({
     }),
   priority: z
     .string()
+    .nullable()
     .optional()
     .transform((val): ActionPriority => {
       if (!val) return "standard"
@@ -42,25 +48,46 @@ export const RawActionItemInputSchema = z.object({
   title: z.string().min(1, "Action title is required"),
   description: z.string().min(1, "Action description is required"),
   whyItMatters: z.string().min(1, "Why it matters explanation is required"),
-  suggestedStep: z.string().optional(),
-  evidenceQuote: z.string().optional().default(""),
+  suggestedStep: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined),
+  evidenceQuote: z
+    .string()
+    .nullable()
+    .optional()
+    .default("")
+    .transform((val) => val ?? ""),
   startLine: z
     .coerce
     .number()
     .int()
+    .nullable()
     .optional()
     .transform((val) => (typeof val === "number" && val > 0 ? val : undefined)),
   endLine: z
     .coerce
     .number()
     .int()
+    .nullable()
     .optional()
     .transform((val) => (typeof val === "number" && val > 0 ? val : undefined)),
   documentDesignation: z
     .enum(["A", "B", "both"])
-    .optional(),
-  relatedFindingId: z.string().optional(),
-  relatedDifferenceId: z.string().optional(),
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined),
+  relatedFindingId: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined),
+  relatedDifferenceId: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined),
 })
 
 export const ActionOutputSchema = z.object({

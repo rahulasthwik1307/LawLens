@@ -19,6 +19,7 @@ export interface UploadedDocument {
   uploadedAt: Date
   jurisdiction: string
   isSample?: boolean
+  pageCount?: number
 }
 
 export type ValidationErrorType =
@@ -26,6 +27,8 @@ export type ValidationErrorType =
   | "file_too_large"
   | "empty_file"
   | "read_error"
+  | "ocr_required"
+  | "extraction_failed"
 
 export interface ValidationError {
   type: ValidationErrorType

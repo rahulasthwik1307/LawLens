@@ -18,8 +18,16 @@ export default function WorkspacePage() {
   const [pendingDoc, setPendingDoc] = React.useState<UploadedDocument | null>(null)
 
   // Handlers for workflow transitions
-  const handleProcessingStart = () => {
+  const handleProcessingStart = (prelimDoc?: UploadedDocument) => {
+    if (prelimDoc) {
+      setPendingDoc(prelimDoc)
+    }
     setLifecycleState("processing")
+  }
+
+  const handleProcessingError = () => {
+    setPendingDoc(null)
+    setLifecycleState("idle")
   }
 
   const handleDocumentReady = (doc: UploadedDocument) => {
@@ -28,7 +36,7 @@ export default function WorkspacePage() {
   }
 
   const handleProcessingComplete = () => {
-    if (pendingDoc) {
+    if (pendingDoc && pendingDoc.isTextReadable) {
       setCurrentDocument(pendingDoc)
       setLifecycleState("ready")
     } else {
@@ -98,6 +106,7 @@ export default function WorkspacePage() {
               <DocumentUploadZone
                 onDocumentReady={handleDocumentReady}
                 onProcessingStart={handleProcessingStart}
+                onProcessingError={handleProcessingError}
               />
             </div>
           )}

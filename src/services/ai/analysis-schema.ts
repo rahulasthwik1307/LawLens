@@ -13,6 +13,7 @@ export const RawFindingSchema = z.object({
   explanation: z.string().min(1, "Finding explanation is required"),
   confidence: z
     .string()
+    .nullable()
     .optional()
     .transform((val): FindingConfidence => {
       if (!val) return "supported_by_source"
@@ -22,24 +23,38 @@ export const RawFindingSchema = z.object({
       if (lower.includes("review") || lower.includes("uncertain")) return "needs_review"
       return "supported_by_source"
     }),
-  uncertainty: z.string().optional(),
-  evidenceQuote: z.string().optional(),
+  uncertainty: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined),
+  evidenceQuote: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined),
   startLine: z
     .coerce
     .number()
     .int()
+    .nullable()
     .optional()
     .transform((val) => (typeof val === "number" && val > 0 ? val : undefined)),
   endLine: z
     .coerce
     .number()
     .int()
+    .nullable()
     .optional()
     .transform((val) => (typeof val === "number" && val > 0 ? val : undefined)),
 })
 
 export const AnalysisOutputSchema = z.object({
-  documentType: z.string().default("Legal Agreement"),
+  documentType: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? "Legal Agreement"),
   summary: z.string().min(1, "Document summary is required"),
   parties: z.array(RawFindingSchema).default([]),
   dates: z.array(RawFindingSchema).default([]),

@@ -2,17 +2,23 @@ import { z } from "zod"
 import type { FindingConfidence, RawQAOutput } from "./types.ts"
 
 export const RawQAEvidenceSchema = z.object({
-  quote: z.string().default(""),
+  quote: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? ""),
   startLine: z
     .coerce
     .number()
     .int()
+    .nullable()
     .optional()
     .transform((val) => (typeof val === "number" && val > 0 ? val : undefined)),
   endLine: z
     .coerce
     .number()
     .int()
+    .nullable()
     .optional()
     .transform((val) => (typeof val === "number" && val > 0 ? val : undefined)),
 })
@@ -21,6 +27,7 @@ export const QAOutputSchema = z.object({
   answer: z.string().min(1, "Answer is required"),
   confidence: z
     .string()
+    .nullable()
     .optional()
     .transform((val): FindingConfidence => {
       if (!val) return "supported_by_source"
@@ -36,7 +43,11 @@ export const QAOutputSchema = z.object({
       }
       return "supported_by_source"
     }),
-  uncertainty: z.string().optional(),
+  uncertainty: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined),
   evidence: z.array(RawQAEvidenceSchema).default([]),
 })
 

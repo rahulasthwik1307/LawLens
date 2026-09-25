@@ -112,3 +112,40 @@ test("Schema Validation — Confidence normalization handles various model forma
   assert.strictEqual(result.data.parties[3].confidence, "unclear_from_document")
   assert.strictEqual(result.data.parties[4].confidence, "supported_by_source") // default fallback
 })
+
+test("Schema Validation — Tolerates null values returned by Groq strict JSON schemas", () => {
+  const outputWithNulls = {
+    documentType: null,
+    summary: "Summary text with null fields",
+    parties: [
+      {
+        title: "Lessor",
+        explanation: "Party explanation",
+        confidence: null,
+        uncertainty: null,
+        evidenceQuote: null,
+        startLine: null,
+        endLine: null,
+      },
+    ],
+    dates: [],
+    monetaryItems: [],
+    rights: [],
+    obligations: [],
+    restrictions: [],
+    termination: [],
+    disputeResolution: [],
+    reviewPoints: [],
+  }
+
+  const result = validateAnalysisSchema(outputWithNulls)
+  assert.strictEqual(result.success, true)
+  assert.ok(result.data)
+  assert.strictEqual(result.data.documentType, "Legal Agreement")
+  assert.strictEqual(result.data.parties[0].title, "Lessor")
+  assert.strictEqual(result.data.parties[0].confidence, "supported_by_source")
+  assert.strictEqual(result.data.parties[0].uncertainty, undefined)
+  assert.strictEqual(result.data.parties[0].evidenceQuote, undefined)
+  assert.strictEqual(result.data.parties[0].startLine, undefined)
+  assert.strictEqual(result.data.parties[0].endLine, undefined)
+})

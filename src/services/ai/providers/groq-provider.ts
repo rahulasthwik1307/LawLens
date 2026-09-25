@@ -22,6 +22,14 @@ import {
   ACTION_JSON_SCHEMA,
   type GroqJsonSchemaContract,
 } from "./groq-schemas.ts"
+import {
+  type AITask,
+  getTaskPolicy,
+  classifyStatusCode,
+  calcRetryDelayMs,
+} from "../task-policy.ts"
+import { runTokenPreflight } from "../token-guard.ts"
+import { aiTelemetry, logTelemetry } from "../ai-telemetry.ts"
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -70,6 +78,12 @@ export function mapErrorToFailureCategory(err: unknown): ComparisonFailureCatego
     return "unprocessable_entity"
   }
   return "unknown"
+}
+
+/** Stable unique request id for telemetry correlation (no external dep) */
+function generateRequestId(): string {
+  const rand = Math.random().toString(36).slice(2, 10)
+  return `${Date.now().toString(36)}-${rand}`
 }
 
 export interface BuildGroqRequestBodyOptions {
@@ -450,6 +464,14 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
       )
     }
 
+    return this.parseGroqHttpResponse(response, model)
+  }
+
+  /**
+   * Parses and validates the HTTP response envelope from Groq.
+   * Shared between callGroqApi and callGroqApiWithTimeout.
+   */
+  private async parseGroqHttpResponse(response: Response, model: string): Promise<string> {
     if (!response.ok) {
       const status = response.status
       let errorDetail = ""
@@ -464,12 +486,11 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
         throw new AIProviderError(
           "REQUEST_TOO_LARGE",
           `Groq request exceeded size limit (413) on model ${model}: ${errorDetail}`,
-          "The document comparison request was too large for the current provider limit. Please try comparing shorter sections.",
+          "The document request was too large for the current provider limit.",
           413,
           false
         )
       }
-
       if (status === 429) {
         throw new AIProviderError(
           "RATE_LIMIT",
@@ -479,7 +500,6 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
           true
         )
       }
-
       if (status === 400) {
         throw new AIProviderError(
           "INVALID_REQUEST",
@@ -489,7 +509,6 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
           false
         )
       }
-
       if (status === 401 || status === 403) {
         throw new AIProviderError(
           "MISSING_API_KEY",
@@ -499,7 +518,6 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
           false
         )
       }
-
       if (status === 422) {
         throw new AIProviderError(
           "MALFORMED_OUTPUT",
@@ -509,7 +527,6 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
           false
         )
       }
-
       if (status === 504) {
         throw new AIProviderError(
           "TIMEOUT",
@@ -519,7 +536,6 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
           true
         )
       }
-
       if (status >= 500) {
         throw new AIProviderError(
           "PROVIDER_UNAVAILABLE",
@@ -529,7 +545,6 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
           true
         )
       }
-
       throw new AIProviderError(
         "PROVIDER_UNAVAILABLE",
         `Groq API returned HTTP ${status} on model ${model}: ${errorDetail}`,
@@ -561,7 +576,6 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
     }
 
     const contentText = responseData?.choices?.[0]?.message?.content
-
     if (!contentText || typeof contentText !== "string") {
       throw new AIProviderError(
         "MALFORMED_OUTPUT",
@@ -571,7 +585,6 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
         true
       )
     }
-
     return contentText
   }
 
@@ -582,13 +595,23 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
    * Validates output with the provided Zod schema validator before returning.
    * Tracks real server-side latencies using high-resolution performance.now().
    */
-  private async executeWithFallback<T>(
+  /**
+   * Executes an AI request using the task-specific policy:
+   * - Uses the correct primary/fallback model for the task
+   * - Enforces task-specific token budgets and timeouts
+   * - Runs ONE controlled retry with exponential backoff on recoverable failures
+   * - Falls back to secondary model only on recoverable failure after retry
+   * - Records privacy-safe telemetry for every attempt
+   * - Never retries non-recoverable errors (400, 401, 403, 413)
+   */
+  private async executeWithPolicy<T>(
+    task: AITask,
     operationName: string,
     systemInstruction: string,
     userPrompt: string,
     jsonSchema: GroqJsonSchemaContract,
     validator: (raw: unknown) => { success: boolean; data?: T; error?: string },
-    options?: { maxCompletionTokens?: number }
+    documentHash?: string
   ): Promise<T> {
     if (!this.apiKey || !this.apiKey.trim()) {
       throw new AIProviderError(
@@ -600,71 +623,172 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
       )
     }
 
+    const policy = getTaskPolicy(task)
+    const requestId = generateRequestId()
+    const docHash = documentHash ?? "unknown"
     const totalStart = performance.now()
-    let primaryLatencyMs = 0
-    let fallbackLatencyMs: number | null = null
 
-    // 1. Attempt Primary Model (GPT-OSS 120B)
-    let primaryError: unknown = null
-    const primaryStart = performance.now()
-    try {
-      const rawText = await this.callGroqApi(
-        this.primaryModel,
-        systemInstruction,
-        userPrompt,
-        jsonSchema,
-        options?.maxCompletionTokens
+    // Token preflight check
+    const preflight = runTokenPreflight(
+      task,
+      systemInstruction.length,
+      userPrompt.length
+    )
+    if (preflight.decision === "reduce") {
+      // Context is too large — guard fires. Log safely and throw.
+      console.warn(
+        `[LawLens:AI] PREFLIGHT_BLOCKED task=${task} estimatedInputTokens=${preflight.estimatedInputTokens} budget=${preflight.taskInputBudget} utilization=${preflight.utilizationPct}%`
       )
-      primaryLatencyMs = Math.round(performance.now() - primaryStart)
+      throw new AIProviderError(
+        "REQUEST_TOO_LARGE",
+        `Token preflight blocked ${operationName}: estimated ${preflight.estimatedInputTokens} tokens exceeds budget ${preflight.taskInputBudget}`,
+        "The document context is too large for this operation. Please try with a smaller document section.",
+        413,
+        false
+      )
+    }
 
+    // Helper: parse and validate a raw text response
+    const parseAndValidate = (rawText: string, model: string): T => {
       const cleaned = rawText
         .replace(/^```json\s*/i, "")
         .replace(/^```\s*/i, "")
         .replace(/```$/i, "")
         .trim()
-
       const parsedJson = JSON.parse(cleaned)
       const validation = validator(parsedJson)
       if (!validation.success || !validation.data) {
         throw new AIProviderError(
           "MALFORMED_OUTPUT",
-          `Primary model ${this.primaryModel} output failed schema validation: ${validation.error}`,
+          `Model ${model} output failed schema validation: ${validation.error}`,
           "The AI service output could not be formatted correctly.",
           422,
           true
         )
       }
+      return validation.data as T
+    }
+
+    // Helper: attempt a single call to the given model with optional retry
+    const attemptWithRetry = async (
+      model: string,
+      maxRetries: number,
+      retryBaseDelayMs: number
+    ): Promise<{ result: T; latencyMs: number; status: number | string; retried: boolean }> => {
+      let lastError: unknown = null
+      let retried = false
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const attemptStart = performance.now()
+
+        if (attempt > 0) {
+          // Exponential backoff before retry
+          const delayMs = calcRetryDelayMs(attempt - 1, retryBaseDelayMs)
+          await new Promise((resolve) => setTimeout(resolve, delayMs))
+          retried = true
+        }
+
+        try {
+          const rawText = await this.callGroqApiWithTimeout(
+            model,
+            systemInstruction,
+            userPrompt,
+            jsonSchema,
+            policy.maxCompletionTokens,
+            policy.timeoutMs
+          )
+          const latencyMs = Math.round(performance.now() - attemptStart)
+          const result = parseAndValidate(rawText, model)
+          return { result, latencyMs, status: 200, retried }
+        } catch (err: unknown) {
+          lastError = err
+          const status = err instanceof AIProviderError ? err.statusCode : 500
+          const recoverability =
+            err instanceof AIProviderError
+              ? classifyStatusCode(err.statusCode)
+              : "recoverable"
+
+          // Non-recoverable: stop immediately, do not retry
+          if (recoverability === "non_recoverable") {
+            throw err
+          }
+
+          // On last attempt, propagate the error
+          if (attempt === maxRetries) {
+            break
+          }
+
+          console.warn(
+            `[LawLens:AI] RETRY attempt=${attempt + 1} task=${task} model=${model} status=${status} reqId=${requestId}`
+          )
+        }
+      }
+
+      throw lastError
+    }
+
+    // ── Phase 1: Primary model attempt (with retry) ──────────────────────────
+    let primaryLatencyMs = 0
+    let primaryStatus: number | string = "error"
+    let primaryError: unknown = null
+    let retried = false
+
+    try {
+      const outcome = await attemptWithRetry(
+        policy.primaryModel,
+        policy.maxRetries,
+        policy.retryBaseDelayMs
+      )
+      primaryLatencyMs = outcome.latencyMs
+      primaryStatus = outcome.status
+      retried = outcome.retried
 
       const totalLatencyMs = Math.round(performance.now() - totalStart)
-      this._lastUsedModel = "Groq · GPT-OSS 120B"
+      const modelLabel = policy.primaryModel.includes("120b") ? "Groq · GPT-OSS 120B" : "Groq · GPT-OSS 20B"
+      this._lastUsedModel = modelLabel
       this._lastMetrics = {
         operation: operationName,
-        primaryModel: this.primaryModel,
-        fallbackModel: this.fallbackModel,
-        providerUsed: this.primaryModel,
+        primaryModel: policy.primaryModel,
+        fallbackModel: policy.fallbackModel,
+        providerUsed: policy.primaryModel,
         fallbackUsed: false,
         primaryLatencyMs,
         fallbackLatencyMs: null,
         totalLatencyMs,
-        primaryStatus: 200,
+        primaryStatus,
         fallbackStatus: null,
         success: true,
       }
 
-      console.info(
-        `[Groq] ${operationName} provider=${this.primaryModel} latencyMs=${primaryLatencyMs} fallback=false primaryStatus=200`
-      )
+      const telemetryRecord = {
+        requestId,
+        task,
+        provider: "groq",
+        primaryModel: policy.primaryModel,
+        documentHash: docHash,
+        inputCharCount: systemInstruction.length + userPrompt.length,
+        estimatedInputTokens: preflight.estimatedInputTokens,
+        maxCompletionTokens: policy.maxCompletionTokens,
+        latencyMs: totalLatencyMs,
+        primaryLatencyMs,
+        primaryStatus,
+        outcome: "success" as const,
+        retried,
+        fallbackUsed: false,
+        cacheHit: false,
+        deduplicated: false,
+        preflightDecision: preflight.decision,
+        recordedAt: new Date().toISOString(),
+      }
+      aiTelemetry.record(telemetryRecord)
+      logTelemetry(telemetryRecord)
 
-      return validation.data as T
+      return outcome.result
     } catch (err: unknown) {
-      primaryLatencyMs = Math.round(performance.now() - primaryStart)
       primaryError = err
+      primaryStatus = err instanceof AIProviderError ? err.statusCode : "error"
 
-      const primaryCategory = mapErrorToFailureCategory(err)
-      const primaryStatus = err instanceof AIProviderError ? err.statusCode : "error"
-
-      // Non-recoverable failures (request_too_large, bad_request, unauthorized, missing_api_key)
-      // must NOT fallback to 20B because sending the identical oversized/invalid payload will fail identically.
+      // Non-recoverable: do not attempt fallback
       const isNonRecoverable =
         err instanceof AIProviderError &&
         (!err.retryable ||
@@ -678,99 +802,128 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
 
       if (isNonRecoverable) {
         const totalLatencyMs = Math.round(performance.now() - totalStart)
+        const failureCategory = mapErrorToFailureCategory(err)
         this._lastMetrics = {
           operation: operationName,
-          primaryModel: this.primaryModel,
-          fallbackModel: this.fallbackModel,
-          providerUsed: this.primaryModel,
+          primaryModel: policy.primaryModel,
+          fallbackModel: policy.fallbackModel,
+          providerUsed: policy.primaryModel,
           fallbackUsed: false,
-          primaryLatencyMs,
+          primaryLatencyMs: Math.round(performance.now() - totalStart),
           fallbackLatencyMs: null,
           totalLatencyMs,
           primaryStatus,
           fallbackStatus: "skipped",
           success: false,
-          failureCategory: primaryCategory,
+          failureCategory,
         }
 
-        console.warn(
-          `[Groq] operation=${operationName} primaryModel=${this.primaryModel} non-recoverable failure (${primaryCategory}) status=${primaryStatus}. Fallback skipped.`
-        )
+        const telemetryRecord = {
+          requestId,
+          task,
+          provider: "groq",
+          primaryModel: policy.primaryModel,
+          documentHash: docHash,
+          inputCharCount: systemInstruction.length + userPrompt.length,
+          estimatedInputTokens: preflight.estimatedInputTokens,
+          maxCompletionTokens: policy.maxCompletionTokens,
+          latencyMs: totalLatencyMs,
+          primaryLatencyMs: totalLatencyMs,
+          primaryStatus,
+          outcome: "primary_failed_non_recoverable" as const,
+          retried,
+          fallbackUsed: false,
+          cacheHit: false,
+          deduplicated: false,
+          preflightDecision: preflight.decision,
+          failureCategory,
+          recordedAt: new Date().toISOString(),
+        }
+        aiTelemetry.record(telemetryRecord)
+        logTelemetry(telemetryRecord)
 
+        console.warn(
+          `[LawLens:AI] NON_RECOVERABLE task=${task} model=${policy.primaryModel} category=${failureCategory} status=${primaryStatus} reqId=${requestId}`
+        )
         throw err
       }
     }
 
-    // 2. Primary model failed on a recoverable error (timeout, 429, 5xx, or malformed schema)
-    // -> Fallback to Secondary Model (GPT-OSS 20B)
-    const primaryCategory = mapErrorToFailureCategory(primaryError)
-    const primaryStatus = primaryError instanceof AIProviderError ? primaryError.statusCode : "error"
+    // ── Phase 2: Fallback model ───────────────────────────────────────────────
+    const primaryFailureCategory = mapErrorToFailureCategory(primaryError)
+    const primaryMs = Math.round(performance.now() - totalStart)
+    primaryLatencyMs = primaryMs
 
     console.warn(
-      `[GROQ_FALLBACK_TRIGGERED] operation=${operationName} primaryModel=${this.primaryModel} reason=${primaryCategory} fallingBackTo=${this.fallbackModel}`
+      `[LawLens:AI] FALLBACK_TRIGGERED task=${task} primary=${policy.primaryModel} reason=${primaryFailureCategory} fallback=${policy.fallbackModel} reqId=${requestId}`
     )
 
     const fallbackStart = performance.now()
     try {
-      const fallbackRawText = await this.callGroqApi(
-        this.fallbackModel,
-        systemInstruction,
-        userPrompt,
-        jsonSchema,
-        options?.maxCompletionTokens
+      const fallbackOutcome = await attemptWithRetry(
+        policy.fallbackModel,
+        0, // No retry on fallback — one clean attempt
+        policy.retryBaseDelayMs
       )
-      fallbackLatencyMs = Math.round(performance.now() - fallbackStart)
-
-      const cleanedFallback = fallbackRawText
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/```$/i, "")
-        .trim()
-
-      const parsedFallback = JSON.parse(cleanedFallback)
-      const validation = validator(parsedFallback)
-      if (!validation.success || !validation.data) {
-        throw new AIProviderError(
-          "MALFORMED_OUTPUT",
-          `Fallback model ${this.fallbackModel} output failed schema validation: ${validation.error}`,
-          "The AI service output could not be formatted correctly.",
-          422,
-          false
-        )
-      }
-
+      const fallbackLatencyMs = fallbackOutcome.latencyMs
+      const fallbackStatus = fallbackOutcome.status
       const totalLatencyMs = Math.round(performance.now() - totalStart)
-      this._lastUsedModel = "Groq · GPT-OSS 20B fallback"
+
+      const modelLabel =
+        policy.fallbackModel.includes("120b") ? "Groq · GPT-OSS 120B fallback" : "Groq · GPT-OSS 20B fallback"
+      this._lastUsedModel = modelLabel
       this._lastMetrics = {
         operation: operationName,
-        primaryModel: this.primaryModel,
-        fallbackModel: this.fallbackModel,
-        providerUsed: this.fallbackModel,
+        primaryModel: policy.primaryModel,
+        fallbackModel: policy.fallbackModel,
+        providerUsed: policy.fallbackModel,
         fallbackUsed: true,
         primaryLatencyMs,
         fallbackLatencyMs,
         totalLatencyMs,
         primaryStatus,
-        fallbackStatus: 200,
+        fallbackStatus: fallbackStatus,
         success: true,
       }
 
-      console.info(
-        `[Groq] ${operationName} primary=${this.primaryModel} primaryLatencyMs=${primaryLatencyMs} primaryStatus=${primaryStatus} fallback=${this.fallbackModel} fallbackLatencyMs=${fallbackLatencyMs} totalLatencyMs=${totalLatencyMs}`
-      )
+      const telemetryRecord = {
+        requestId,
+        task,
+        provider: "groq",
+        primaryModel: policy.primaryModel,
+        fallbackModel: policy.fallbackModel,
+        documentHash: docHash,
+        inputCharCount: systemInstruction.length + userPrompt.length,
+        estimatedInputTokens: preflight.estimatedInputTokens,
+        maxCompletionTokens: policy.maxCompletionTokens,
+        latencyMs: totalLatencyMs,
+        primaryLatencyMs,
+        fallbackLatencyMs,
+        primaryStatus,
+        fallbackStatus,
+        outcome: "fallback_success" as const,
+        retried,
+        fallbackUsed: true,
+        cacheHit: false,
+        deduplicated: false,
+        preflightDecision: preflight.decision,
+        recordedAt: new Date().toISOString(),
+      }
+      aiTelemetry.record(telemetryRecord)
+      logTelemetry(telemetryRecord)
 
-      return validation.data as T
+      return fallbackOutcome.result
     } catch (fallbackErr: unknown) {
-      fallbackLatencyMs = Math.round(performance.now() - fallbackStart)
+      const fallbackLatencyMs = Math.round(performance.now() - fallbackStart)
       const totalLatencyMs = Math.round(performance.now() - totalStart)
       const fallbackCategory = mapErrorToFailureCategory(fallbackErr)
       const fallbackStatus = fallbackErr instanceof AIProviderError ? fallbackErr.statusCode : "error"
-      const finalFailureCategory = fallbackCategory !== "unknown" ? fallbackCategory : primaryCategory
+      const finalFailureCategory = fallbackCategory !== "unknown" ? fallbackCategory : primaryFailureCategory
 
       this._lastMetrics = {
         operation: operationName,
-        primaryModel: this.primaryModel,
-        fallbackModel: this.fallbackModel,
+        primaryModel: policy.primaryModel,
+        fallbackModel: policy.fallbackModel,
         providerUsed: "none",
         fallbackUsed: true,
         primaryLatencyMs,
@@ -782,18 +935,102 @@ export class GroqLegalAnalysisProvider implements LegalAnalysisProvider {
         failureCategory: finalFailureCategory,
       }
 
+      const telemetryRecord = {
+        requestId,
+        task,
+        provider: "groq",
+        primaryModel: policy.primaryModel,
+        fallbackModel: policy.fallbackModel,
+        documentHash: docHash,
+        inputCharCount: systemInstruction.length + userPrompt.length,
+        estimatedInputTokens: preflight.estimatedInputTokens,
+        maxCompletionTokens: policy.maxCompletionTokens,
+        latencyMs: totalLatencyMs,
+        primaryLatencyMs,
+        fallbackLatencyMs,
+        primaryStatus,
+        fallbackStatus,
+        outcome: "dual_failure" as const,
+        retried,
+        fallbackUsed: true,
+        cacheHit: false,
+        deduplicated: false,
+        preflightDecision: preflight.decision,
+        failureCategory: finalFailureCategory,
+        recordedAt: new Date().toISOString(),
+      }
+      aiTelemetry.record(telemetryRecord)
+      logTelemetry(telemetryRecord)
+
       console.error(
-        `[GROQ_DUAL_FAILURE] operation=${operationName} primaryModel=${this.primaryModel} fallbackModel=${this.fallbackModel} primaryLatencyMs=${primaryLatencyMs} fallbackLatencyMs=${fallbackLatencyMs} totalLatencyMs=${totalLatencyMs} primaryStatus=${primaryStatus} fallbackStatus=${fallbackStatus} failureCategory=${finalFailureCategory}`
+        `[LawLens:AI] DUAL_FAILURE task=${task} primary=${policy.primaryModel} fallback=${policy.fallbackModel} primaryMs=${primaryLatencyMs} fallbackMs=${fallbackLatencyMs} totalMs=${totalLatencyMs} category=${finalFailureCategory} reqId=${requestId}`
       )
 
       throw new AIProviderError(
         "PROVIDER_UNAVAILABLE",
-        `Both primary (${this.primaryModel}) and fallback (${this.fallbackModel}) models failed. Primary: ${primaryCategory}, Fallback: ${fallbackCategory}`,
+        `Both primary (${policy.primaryModel}) and fallback (${policy.fallbackModel}) models failed. Primary: ${primaryFailureCategory}, Fallback: ${fallbackCategory}`,
         "The AI service could not complete this analysis right now. Your original document remains safe and available.",
         502,
         true
       )
     }
+  }
+
+  /**
+   * Calls the Groq API with a per-request configurable timeout.
+   * Identical to callGroqApi but accepts explicit timeoutMs for task-level control.
+   */
+  private async callGroqApiWithTimeout(
+    model: string,
+    systemInstruction: string,
+    userPrompt: string,
+    jsonSchema: GroqJsonSchemaContract,
+    maxCompletionTokens: number,
+    timeoutMs: number
+  ): Promise<string> {
+    const requestBody = buildGroqRequestBody({
+      model,
+      systemInstruction,
+      userPrompt,
+      jsonSchema,
+      reasoningEffort: "low",
+      temperature: 0.1,
+      maxCompletionTokens,
+    })
+
+    let response: Response
+    try {
+      response = await fetch(GROQ_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+    } catch (networkError: unknown) {
+      const isTimeout =
+        (networkError instanceof Error &&
+          (networkError.name === "TimeoutError" || networkError.name === "AbortError")) ||
+        (networkError instanceof DOMException && networkError.name === "TimeoutError")
+
+      throw new AIProviderError(
+        isTimeout ? "TIMEOUT" : "PROVIDER_UNAVAILABLE",
+        isTimeout
+          ? `Groq request timed out after ${timeoutMs}ms with model ${model}`
+          : `Network error communicating with Groq API: ${
+              networkError instanceof Error ? networkError.message : String(networkError)
+            }`,
+        isTimeout
+          ? "The analysis timed out. Your document is safe; please try again."
+          : "Could not reach AI service. Please check your connection and try again.",
+        isTimeout ? 504 : 502,
+        true
+      )
+    }
+
+    return this.parseGroqHttpResponse(response, model)
   }
 
   async analyzeDocument(request: LegalAnalysisRequest): Promise<RawAnalysisOutput> {
@@ -808,13 +1045,14 @@ Ensure every finding cites verbatim evidence quotes and line numbers.
 ${annotatedStream}
 </document_source_content>`
 
-    return this.executeWithFallback<RawAnalysisOutput>(
+    return this.executeWithPolicy<RawAnalysisOutput>(
+      "findings",
       "analyzeDocument",
       SYSTEM_INSTRUCTION_ANALYSIS,
       userPrompt,
       ANALYSIS_JSON_SCHEMA,
       validateAnalysisSchema,
-      { maxCompletionTokens: 3000 }
+      request.document.id
     )
   }
 
@@ -841,13 +1079,14 @@ ${documentStream}
 
 Answer the question strictly based on the text above. Cite verbatim quotes and exact line numbers. If the text does not contain the answer, state that clearly and set confidence to "unclear_from_document".`
 
-    return this.executeWithFallback<RawQAOutput>(
+    return this.executeWithPolicy<RawQAOutput>(
+      "qa",
       "answerQuestion",
       SYSTEM_INSTRUCTION_QA,
       userPrompt,
       QA_JSON_SCHEMA,
       validateQASchema,
-      { maxCompletionTokens: 1000 }
+      request.document.id
     )
   }
 
@@ -860,21 +1099,15 @@ Answer the question strictly based on the text above. Cite verbatim quotes and e
       request.documentB.jurisdiction ||
       "India"
 
-    // Safe input token approximation without logging content
+    // Safe metadata log (no content)
     const textA = request.documentA.sourceText || ""
     const docAChars = textA.length
-    const docALines = request.documentA.lineCount || request.documentA.lines?.length || 0
-    const docATokens = Math.ceil(docAChars / 4)
-
+    const docALines = request.documentA.lineCount || 0
     const textB = request.documentB.sourceText || ""
     const docBChars = textB.length
-    const docBLines = request.documentB.lineCount || request.documentB.lines?.length || 0
-    const docBTokens = Math.ceil(docBChars / 4)
-
-    const combinedApproximateTokenCount = docATokens + docBTokens
-
+    const docBLines = request.documentB.lineCount || 0
     console.info(
-      `[Groq] compareDocuments input metadata: documentA(chars=${docAChars}, lines=${docALines}, approxTokens=${docATokens}) documentB(chars=${docBChars}, lines=${docBLines}, approxTokens=${docBTokens}) combinedApproximateTokenCount=${combinedApproximateTokenCount}`
+      `[LawLens:AI] compareDocuments documentA(chars=${docAChars}, lines=${docALines}) documentB(chars=${docBChars}, lines=${docBLines})`
     )
 
     const streamA = formatAnnotatedDocumentStream(request.documentA)
@@ -901,13 +1134,14 @@ ${streamB}
 
 Provide an executive summary, unchanged provisions summary, and structured difference items with review status and dual evidence quotes.`
 
-    return this.executeWithFallback<RawComparisonOutput>(
+    return this.executeWithPolicy<RawComparisonOutput>(
+      "compare",
       "compareDocuments",
       SYSTEM_INSTRUCTION_COMPARISON,
       userPrompt,
       COMPARISON_JSON_SCHEMA,
       validateComparisonSchema,
-      { maxCompletionTokens: 3000 }
+      request.documentA.id
     )
   }
 
@@ -943,13 +1177,13 @@ Transform each verified candidate above into a structured, evidence-grounded act
 Clause → Meaning → Why it matters → What to check/do → Source.
 Adhere strictly to neutral wording without offering definitive legal advice.`
 
-    return this.executeWithFallback<RawActionGenerationOutput>(
+    return this.executeWithPolicy<RawActionGenerationOutput>(
+      "actions",
       "generateActions",
       SYSTEM_INSTRUCTION_ACTIONS,
       userPrompt,
       ACTION_JSON_SCHEMA,
-      validateActionSchema,
-      { maxCompletionTokens: 2500 }
+      validateActionSchema
     )
   }
 }

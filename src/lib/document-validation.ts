@@ -1,4 +1,4 @@
-import { UploadedDocument, ValidationError, ValidationResult } from "@/types/document"
+import type { UploadedDocument, ValidationError, ValidationResult } from "../types/document.ts"
 
 export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 export const SUPPORTED_EXTENSIONS = [".txt", ".md", ".pdf", ".docx"]
@@ -39,6 +39,44 @@ export function validateFileMetadata(file: File): ValidationError | null {
   return null
 }
 
+/**
+ * Normalizes extracted text for deterministic line indexing and evidence grounding.
+ * 1. Standardizes CRLF and CR to LF.
+ * 2. Strips null bytes and control characters (preserving tab and newline).
+ * 3. Trims trailing whitespace per line.
+ * 4. Collapses excessive consecutive blank lines (maximum 2 consecutive empty lines).
+ */
+export function normalizeExtractedText(rawText: string): string {
+  if (!rawText) return ""
+
+  // 1. Standardize newline characters
+  let text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
+
+  // 2. Strip null bytes and non-printable control characters (keep \t=0x09, \n=0x0A)
+  text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+
+  // 3. Trim trailing whitespace per line
+  const lines = text.split("\n").map((line) => line.trimEnd())
+
+  // 4. Collapse excessive consecutive blank lines
+  const normalizedLines: string[] = []
+  let consecutiveBlank = 0
+
+  for (const line of lines) {
+    if (line.trim() === "") {
+      consecutiveBlank++
+      if (consecutiveBlank <= 2) {
+        normalizedLines.push("")
+      }
+    } else {
+      consecutiveBlank = 0
+      normalizedLines.push(line)
+    }
+  }
+
+  return normalizedLines.join("\n").trim()
+}
+
 export async function processLocalFile(
   file: File,
   jurisdiction: string = "India"
@@ -49,24 +87,84 @@ export async function processLocalFile(
   }
 
   const extension = "." + (file.name.split(".").pop()?.toLowerCase() || "")
-  const isTextReadable = extension === ".txt" || extension === ".md"
+  const isTextFormat = extension === ".txt" || extension === ".md"
 
   try {
     let content = ""
     let lineCount = 0
     let wordCount = 0
+    let pageCount: number | undefined
 
-    if (isTextReadable) {
-      content = await file.text()
-      const lines = content.split(/\r\n|\r|\n/)
+    if (isTextFormat) {
+      // Local client-side text reading for instant speed
+      const rawText = await file.text()
+      const normalized = normalizeExtractedText(rawText)
+
+      const matches = normalized.match(/[\p{L}\p{N}]/gu)
+      if (!normalized || !matches || matches.length < 3) {
+        return {
+          isValid: false,
+          error: {
+            type: "empty_file",
+            title: "Empty Document Content",
+            message: `The text file "${file.name}" contains no readable words or clauses.`,
+            suggestion: "Please upload a document with valid agreement text.",
+          },
+        }
+      }
+
+      content = normalized
+      const lines = content.split("\n")
       lineCount = lines.length
-      wordCount = content.trim().split(/\s+/).filter(Boolean).length
+      wordCount = content.split(/\s+/).filter(Boolean).length
     } else {
-      // For binary formats (PDF/DOCX) in Phase 2, provide an honest safe structural container
-      // Note: Full client-side PDF/DOCX rendering is in subsequent phases; we preserve file integrity
-      content = `[Safe Document Container: ${file.name}]\nFormat: ${file.type || extension.toUpperCase()}\nSize: ${(file.size / 1024).toFixed(1)} KB\n\nNotice: This is a binary legal file (${extension.toUpperCase()}). File metadata and intake boundaries are verified. Full server-side extraction pipeline is required for this format. To inspect live text analysis immediately, try uploading a .TXT or .MD document, or load one of the authentic Indian sample agreements.`
-      lineCount = 6
-      wordCount = content.trim().split(/\s+/).length
+      // Binary formats (.pdf, .docx): perform server-side extraction
+      if (typeof window !== "undefined") {
+        // Browser environment: call /api/documents/extract
+        const formData = new FormData()
+        formData.append("file", file)
+
+        const res = await fetch("/api/documents/extract", {
+          method: "POST",
+          body: formData,
+        })
+
+        const data = await res.json()
+
+        if (!res.ok || !data.success) {
+          return {
+            isValid: false,
+            error: {
+              type: data.code === "OCR_REQUIRED" ? "ocr_required" : "read_error",
+              title: data.title || "Extraction Failed",
+              message:
+                data.error ||
+                `The ${extension.toUpperCase()} document could not be extracted.`,
+              suggestion:
+                data.suggestion ||
+                "Please verify the document format or try a text (.TXT) version.",
+            },
+          }
+        }
+
+        content = data.content
+        lineCount = data.lineCount
+        wordCount = data.wordCount
+        pageCount = data.pageCount
+      } else {
+        // Node.js runtime (e.g. unit tests): invoke server extractor directly
+        const { extractDocumentText } = await import(
+          "../services/documents/document-extractor.ts"
+        )
+        const arrayBuf = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuf)
+        const result = await extractDocumentText(buffer, extension, file.name)
+
+        content = result.content
+        lineCount = result.lineCount
+        wordCount = result.wordCount
+        pageCount = result.pageCount
+      }
     }
 
     const doc: UploadedDocument = {
@@ -76,21 +174,40 @@ export async function processLocalFile(
       type: file.type || "application/octet-stream",
       extension,
       content,
-      isTextReadable,
+      isTextReadable: true,
       lineCount,
       wordCount,
+      pageCount,
       uploadedAt: new Date(),
       jurisdiction,
     }
 
     return { isValid: true, document: doc }
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "code" in err) {
+      const extErr = err as {
+        code: string
+        title: string
+        message: string
+        suggestion: string
+      }
+      return {
+        isValid: false,
+        error: {
+          type: extErr.code === "OCR_REQUIRED" ? "ocr_required" : "read_error",
+          title: extErr.title,
+          message: extErr.message,
+          suggestion: extErr.suggestion,
+        },
+      }
+    }
+
     return {
       isValid: false,
       error: {
         type: "read_error",
         title: "File Reading Error",
-        message: "The document could not be read by your browser.",
+        message: "The document could not be read or extracted.",
         suggestion: "Ensure the file is not locked by another application and try again.",
       },
     }
